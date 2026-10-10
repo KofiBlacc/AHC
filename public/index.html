@@ -119,6 +119,20 @@ dialog h2{margin:0 0 4px;font-size:1.3rem}
     <ul id="list"></ul>
   </section>
 </main>
+<dialog id="photoDlg">
+  <h2>Add photo evidence</h2>
+  <p class="due" id="pTask"></p>
+  <label for="pFile">Take or choose a photo</label>
+  <input type="file" id="pFile" accept="image/*">
+  <img id="pPrev" alt="Preview of your photo" hidden style="width:100%;margin-top:12px;border-radius:10px">
+  <p class="err" id="pErr" role="alert"></p>
+  <div class="acts"><button type="button" class="ghost" id="pCancel">Cancel</button><button type="button" class="btn" id="pSave" disabled>Mark done</button></div>
+</dialog>
+<dialog id="viewDlg">
+  <h2 id="vTitle">Photo evidence</h2>
+  <img id="vImg" alt="Photo evidence for this task" style="width:100%;margin-top:8px;border-radius:10px">
+  <div class="acts"><button type="button" class="ghost" id="vClose">Close</button></div>
+</dialog>
 <script>
 const $ = (id) => document.getElementById(id);
 let me = null, users = [], tasks = [], filter = 'active', pf = 'all';
@@ -184,7 +198,12 @@ function render() {
     (!admin || pf === 'all' || (pf === 'none' ? !t.assignee_id : String(t.assignee_id) === pf)));
   const list = $('list'); list.replaceChildren();
   shown.forEach((t) => {
-    const cb = el('input', { type: 'checkbox', checked: t.done, onchange: () => patch(t.id, { done: cb.checked }) });
+    const cb = el('input', { type: 'checkbox', checked: t.done, onchange: () => {
+      if (!t.done) { cb.checked = false; askPhoto(t); return; }          // ticking needs a photo first
+      cb.checked = true;
+      if (admin && confirm('Reopen this task? Its photo evidence will be deleted.')) patch(t.id, { done: false });
+    } });
+    if (t.done && !admin) cb.disabled = true;                              // members cannot un-tick
     cb.setAttribute('aria-label', 'Mark done');
     const title = el('span', { className: 'title', textContent: t.text });
     const body = el('div', { className: 'body' }, title);
@@ -198,6 +217,7 @@ function render() {
         inp.onblur = () => fin(true);
       };
     }
+    if (t.has_photo) body.append(el('button', { className: 'mini', textContent: 'View photo', style: 'margin-left:8px', onclick: () => showPhoto(t) }));
     if (t.due) { const late = !t.done && t.due < today(); body.append(el('span', { className: 'due' + (late ? ' late' : ''), textContent: (late ? 'Overdue \u00b7 ' : 'Due ') + fmt(t.due) })); }
     const li = el('li', { className: t.done ? 'done' : '' }, cb, body);
     li.dataset.p = t.priority;
@@ -214,6 +234,41 @@ function render() {
   $('count').textContent = open + ' to do \u00b7 ' + (tasks.length - open) + ' done';
   $('sub').textContent = 'Signed in as ' + me.name + '. ' + (admin ? open + ' open across the team.' : open + (open === 1 ? ' task' : ' tasks') + ' assigned to you.');
 }
+let pendingTask = null, pendingImage = null;
+function askPhoto(t) {
+  pendingTask = t; pendingImage = null;
+  $('pFile').value = ''; $('pPrev').hidden = true; $('pErr').textContent = ''; $('pSave').disabled = true;
+  $('pTask').textContent = 'To mark "' + t.text + '" as done, add a photo showing the finished work.';
+  $('photoDlg').showModal();
+}
+async function shrink(file) {   // resize + re-encode so uploads stay small and fast
+  let img;
+  try { img = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch (e) { img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(file); }); }
+  const w = img.width, h = img.height, k = Math.min(1, 1280 / Math.max(w, h));
+  const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  for (const q of [0.8, 0.6, 0.4]) {
+    const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', q));
+    if (blob && blob.size < 1.5 * 1024 * 1024) return await new Promise((r) => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(blob); });
+  }
+  throw new Error('too big');
+}
+$('pFile').onchange = async (e) => {
+  const f = e.target.files[0]; pendingImage = null; $('pSave').disabled = true; $('pPrev').hidden = true; $('pErr').textContent = '';
+  if (!f) return;
+  try { pendingImage = await shrink(f); $('pPrev').src = pendingImage; $('pPrev').hidden = false; $('pSave').disabled = false; }
+  catch (err) { $('pErr').textContent = "That file couldn't be read as a photo. Please try a JPEG or PNG."; }
+};
+$('pCancel').onclick = () => $('photoDlg').close();
+$('pSave').onclick = async () => {
+  if (!pendingImage || !pendingTask) return;
+  $('pSave').disabled = true; $('pErr').textContent = 'Uploading...';
+  try { await api('/api/evidence?id=' + pendingTask.id, 'POST', { image: pendingImage }); $('photoDlg').close(); await load(); }
+  catch (err) { $('pErr').textContent = err.message; $('pSave').disabled = false; }
+};
+function showPhoto(t) { $('vTitle').textContent = t.text; $('vImg').src = '/api/evidence?id=' + t.id + '&t=' + Date.now(); $('viewDlg').showModal(); }
+$('vClose').onclick = () => $('viewDlg').close();
 async function patch(id, data) { try { await api('/api/tasks?id=' + id, 'PATCH', data); await load(); } catch (e) { note(e.message); load(); } }
 
 $('loginForm').onsubmit = async (e) => {

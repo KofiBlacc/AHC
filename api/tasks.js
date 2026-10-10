@@ -10,10 +10,12 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Members only ever receive tasks assigned to them; this is enforced here, in the query.
       const rows = isAdmin
-        ? await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.assignee_id, u.name as assignee_name
+        ? await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.assignee_id, u.name as assignee_name,
+            exists(select 1 from task_photos p where p.task_id = t.id) as has_photo
             from tasks t left join users u on u.id = t.assignee_id
             order by t.done, case t.priority when 'high' then 0 when 'med' then 1 else 2 end, t.due nulls last, t.id`
-        : await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.assignee_id, u.name as assignee_name
+        : await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.assignee_id, u.name as assignee_name,
+            exists(select 1 from task_photos p where p.task_id = t.id) as has_photo
             from tasks t left join users u on u.id = t.assignee_id
             where t.assignee_id = ${me.id}
             order by t.done, case t.priority when 'high' then 0 when 'med' then 1 else 2 end, t.due nulls last, t.id`;
@@ -23,10 +25,7 @@ export default async function handler(req, res) {
     const id = Number(req.query.id);
 
     if (req.method === 'PATCH') {
-      if (!isAdmin) { // members may only tick off their own tasks
-        const rows = await sql`update tasks set done = ${!!b.done} where id = ${id} and assignee_id = ${me.id} returning id`;
-        return rows[0] ? json(res, 200, { ok: true }) : json(res, 404, { error: 'Task not found.' });
-      }
+      if (!isAdmin) return json(res, 403, { error: 'Upload a photo to complete a task.' }); // members finish tasks only via /api/evidence
       const [t] = await sql`select * from tasks where id = ${id}`;
       if (!t) return json(res, 404, { error: 'Task not found.' });
       const text = b.text !== undefined ? String(b.text).trim() : t.text;
@@ -34,6 +33,11 @@ export default async function handler(req, res) {
       const done = b.done !== undefined ? !!b.done : t.done;
       const assignee = b.assignee_id !== undefined ? (b.assignee_id ? Number(b.assignee_id) : null) : t.assignee_id;
       if (!text) return json(res, 400, { error: 'Task text is required.' });
+      if (done && !t.done) {
+        const [p] = await sql`select 1 as ok from task_photos where task_id = ${id}`;
+        if (!p) return json(res, 400, { error: 'A photo is required to mark a task done.' });
+      }
+      if (!done) await sql`delete from task_photos where task_id = ${id}`; // reopening discards the old evidence
       await sql`update tasks set text = ${text}, priority = ${priority}, done = ${done}, assignee_id = ${assignee} where id = ${id}`;
       return json(res, 200, { ok: true });
     }
