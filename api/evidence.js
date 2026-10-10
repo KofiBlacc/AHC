@@ -1,4 +1,6 @@
+import { randomBytes } from 'node:crypto';
 import { sql, json, guard } from '../lib/common.js';
+import { notifyTaskDone } from '../lib/notify.js';
 
 const MAX_BYTES = 2 * 1024 * 1024; // the page shrinks photos well below this
 
@@ -34,15 +36,19 @@ export default async function handler(req, res) {
       const buf = Buffer.from(raw, 'base64');
       const mime = sniff(buf);
       if (!mime || buf.length > MAX_BYTES) return json(res, 400, { error: 'Please upload a JPEG, PNG or WebP photo.' });
+      const token = randomBytes(12).toString('base64url'); // random, unguessable id for the public SMS link
       // Save the photo and mark the task done together, or neither.
       await sql.transaction([
-        sql`insert into task_photos (task_id, mime, data, uploaded_by)
-            values (${id}, ${mime}, decode(${buf.toString('base64')}, 'base64'), ${me.id})
+        sql`insert into task_photos (task_id, mime, data, uploaded_by, view_token)
+            values (${id}, ${mime}, decode(${buf.toString('base64')}, 'base64'), ${me.id}, ${token})
             on conflict (task_id) do update
-            set mime = excluded.mime, data = excluded.data, uploaded_by = excluded.uploaded_by, uploaded_at = now()`,
+            set mime = excluded.mime, data = excluded.data, uploaded_by = excluded.uploaded_by, view_token = excluded.view_token, uploaded_at = now()`,
         sql`update tasks set done = true where id = ${id}`,
       ]);
-      return json(res, 200, { ok: true });
+      // Tell the notification recipients (awaited, because serverless functions can stop right after responding).
+      const [info] = await sql`select text from tasks where id = ${id}`;
+      const notify = await notifyTaskDone({ task: info.text, by: me.name, link: `${String(process.env.APP_URL || '').replace(/\/$/, '')}/p/${token}` });
+      return json(res, 200, { ok: true, notify });
     }
     return json(res, 405, { error: 'Method not allowed' });
   } catch (e) {

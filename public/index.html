@@ -264,7 +264,11 @@ $('pCancel').onclick = () => $('photoDlg').close();
 $('pSave').onclick = async () => {
   if (!pendingImage || !pendingTask) return;
   $('pSave').disabled = true; $('pErr').textContent = 'Uploading...';
-  try { await api('/api/evidence?id=' + pendingTask.id, 'POST', { image: pendingImage }); $('photoDlg').close(); await load(); }
+  try {
+    const d = await api('/api/evidence?id=' + pendingTask.id, 'POST', { image: pendingImage });
+    $('photoDlg').close(); await load();
+    if (d.notify && d.notify.failed) note('Task marked done, but the notification failed for ' + d.notify.failed + ' number(s): ' + (d.notify.error || 'unknown error'));
+  }
   catch (err) { $('pErr').textContent = err.message; $('pSave').disabled = false; }
 };
 function showPhoto(t) { $('vTitle').textContent = t.text; $('vImg').src = '/api/evidence?id=' + t.id + '&t=' + Date.now(); $('viewDlg').showModal(); }
