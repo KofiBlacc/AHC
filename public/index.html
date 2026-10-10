@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Task list</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#eef2f6;--panel:#fff;--ink:#14213d;--muted:#6b7890;--line:#d9e0ea;--accent:#2f5bea;--on:#fff;--mark:#ffe14d;--hi:#e5484d;--md:#f0a020;--lo:#3aa675}
+@media (prefers-color-scheme:dark){:root{--bg:#10151f;--panel:#182030;--ink:#e8edf6;--muted:#8d9ab0;--line:#2a3548;--accent:#6f93ff;--on:#10151f;--mark:#8a7a1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:2.4rem;line-height:1.1;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+h1 span{background:linear-gradient(transparent 62%,var(--mark) 62%)}
+.sub{color:var(--muted);margin:0 0 20px}
+input,select,button,textarea{font:inherit;color:inherit}
+input,select{background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{background:var(--accent);color:var(--on);border:0;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer}
+.ghost,.mini{background:none;border:1.5px solid var(--line);border-radius:10px;padding:10px 18px;cursor:pointer}
+.mini{padding:3px 10px;font-size:.82rem;border-radius:8px}
+.card{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.card label,dialog label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
+.card input,dialog input{width:100%}
+.err{color:var(--hi);min-height:1.3em;margin:8px 0 0;font-size:.9rem}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+details{background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+summary{cursor:pointer;font-weight:600}
+.reg{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.reg .due{overflow-wrap:anywhere}
+form.add{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px}
+form.add .opts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:20px 0 10px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:3px}
+.tabs button{background:none;border:0;border-radius:7px;padding:5px 12px;cursor:pointer;color:var(--muted);font-weight:600}
+.tabs button[aria-pressed=true]{background:var(--accent);color:var(--on)}
+.count{color:var(--muted);font-size:.9rem}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+li{display:flex;align-items:center;gap:12px;background:var(--panel);border:1.5px solid var(--line);border-left:6px solid var(--md);border-radius:10px;padding:10px 12px}
+li[data-p=high]{border-left-color:var(--hi)}li[data-p=low]{border-left-color:var(--lo)}
+li input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none;cursor:pointer}
+.body{flex:1;min-width:0}.title{display:block;overflow-wrap:anywhere}
+li.done .title{text-decoration:line-through;color:var(--muted)}
+.due{font-size:.82rem;color:var(--muted)}.due.late{color:var(--hi);font-weight:600}
+li select{max-width:130px;padding:4px 8px;font-size:.85rem}
+.x{background:none;border:0;color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;padding:6px}
+.x:hover{color:var(--hi)}
+.empty{text-align:center;color:var(--muted);padding:32px 0;display:block;border:0;background:none}
+dialog{border:1.5px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:20px;width:min(92vw,400px)}
+dialog::backdrop{background:rgba(10,15,30,.5)}
+dialog h2{margin:0 0 4px;font-size:1.3rem}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>My <span>tasks</span></h1>
+
+  <section id="login" class="card" hidden>
+    <strong>Sign in</strong>
+    <form id="loginForm">
+      <label for="lEmail">Email</label><input id="lEmail" type="email" required autocomplete="username">
+      <label for="lPass">Password</label><input id="lPass" type="password" required autocomplete="current-password">
+      <p class="err" id="lErr" role="alert"></p>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <section id="accept" class="card" hidden>
+    <strong id="aHello">Welcome</strong>
+    <p class="sub" style="margin:4px 0 0">Choose a password to finish setting up your account.</p>
+    <form id="acceptForm">
+      <label for="aPass">New password</label><input id="aPass" type="password" required minlength="8" autocomplete="new-password">
+      <p class="err" id="aErr" role="alert"></p>
+      <button class="btn" type="submit">Save password and continue</button>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="top"><p class="sub" id="sub" style="margin:0"></p><button class="mini" id="logout">Sign out</button></div>
+    <p class="err" id="note" role="status"></p>
+
+    <details id="team" hidden>
+      <summary>Team members</summary>
+      <div id="members" style="margin:10px 0"></div>
+      <button type="button" class="btn" id="addPerson">Add person</button>
+      <dialog id="reg" aria-labelledby="regTitle">
+        <form id="regForm">
+          <h2 id="regTitle">Register a person</h2>
+          <p class="sub" style="font-size:.9rem;margin:0">They'll receive an email with a link to set their password.</p>
+          <label for="rName">Name</label><input id="rName" type="text" required autocomplete="off">
+          <label for="rEmail">Email</label><input id="rEmail" type="email" required autocomplete="off">
+          <label for="rPhone">Mobile number</label><input id="rPhone" type="tel" required autocomplete="off" placeholder="+1 555 010 0199">
+          <p class="err" id="rMsg" role="status"></p>
+          <div class="acts"><button type="button" class="ghost" id="rCancel">Cancel</button><button class="btn" id="rSave" type="submit">Save and send invite</button></div>
+        </form>
+      </dialog>
+    </details>
+
+    <form class="add" id="taskForm" hidden>
+      <input type="text" id="text" placeholder="What needs doing?" aria-label="New task" autocomplete="off" required>
+      <button class="btn" type="submit">Add task</button>
+      <div class="opts">
+        <select id="who" aria-label="Assign to"></select>
+        <select id="prio" aria-label="Priority"><option value="high">High priority</option><option value="med" selected>Medium priority</option><option value="low">Low priority</option></select>
+        <input type="date" id="due" aria-label="Due date">
+      </div>
+    </form>
+
+    <div class="bar">
+      <div class="tabs" role="group" aria-label="Filter">
+        <button data-f="active" aria-pressed="true">To do</button><button data-f="done" aria-pressed="false">Done</button><button data-f="all" aria-pressed="false">All</button>
+      </div>
+      <select id="pf" aria-label="Show tasks for" hidden></select>
+      <span class="count" id="count"></span>
+    </div>
+    <ul id="list"></ul>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let me = null, users = [], tasks = [], filter = 'active', pf = 'all';
+
+async function api(path, method = 'GET', body) {
+  const r = await fetch(path, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.error || 'Something went wrong.'); e.data = d; e.status = r.status; throw e; }
+  return d;
+}
+const note = (t) => { $('note').textContent = t || ''; };
+const today = () => new Date().toLocaleDateString('en-CA');
+const fmt = (s) => { const p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); };
+const el = (tag, props, ...kids) => { const n = Object.assign(document.createElement(tag), props); kids.forEach((k) => n.append(k)); return n; };
+
+async function boot() {
+  const token = new URLSearchParams(location.search).get('invite');
+  if (token) {
+    try { const d = await api('/api/auth?action=invite&token=' + encodeURIComponent(token)); $('aHello').textContent = 'Welcome, ' + d.name; $('accept').hidden = false; }
+    catch (e) { $('login').hidden = false; $('lErr').textContent = e.message; }
+    return;
+  }
+  const d = await api('/api/auth?action=me');
+  if (d.user) { me = d.user; await start(); } else $('login').hidden = false;
+}
+async function start() {
+  $('login').hidden = true; $('accept').hidden = true; $('app').hidden = false;
+  const admin = me.role === 'admin';
+  $('team').hidden = !admin; $('taskForm').hidden = !admin; $('pf').hidden = !admin;
+  history.replaceState(null, '', location.pathname);
+  await load();
+}
+async function load() {
+  try {
+    const [t, u] = await Promise.all([api('/api/tasks'), me.role === 'admin' ? api('/api/users') : { users: [] }]);
+    tasks = t.tasks; users = u.users; render();
+  } catch (e) { if (e.status === 401) location.reload(); else note(e.message); }
+}
+
+function render() {
+  const admin = me.role === 'admin';
+  if (admin) {
+    const mem = $('members'); mem.replaceChildren();
+    users.forEach((u) => {
+      const info = el('div', { style: 'flex:1;min-width:0' }, el('strong', { textContent: u.name }),
+        el('small', { textContent: u.invited ? '  Invited' : '  Active', style: 'color:' + (u.invited ? 'var(--md)' : 'var(--lo)') }),
+        el('div', { className: 'due', textContent: u.email + (u.phone ? ' \u00b7 ' + u.phone : '') }));
+      const row = el('div', { className: 'reg' }, info);
+      if (u.invited) row.append(el('button', { className: 'mini', textContent: 'Resend invite', onclick: async (ev) => {
+        ev.target.disabled = true;
+        try { await api('/api/users?action=resend', 'POST', { id: u.id }); note('Invite sent to ' + u.email + '.'); } catch (e) { note(e.message); }
+        ev.target.disabled = false; } }));
+      if (u.id !== me.id) row.append(el('button', { className: 'mini', textContent: 'Remove', onclick: async () => {
+        if (!confirm('Remove ' + u.name + '? Their tasks become unassigned.')) return;
+        try { await api('/api/users?id=' + u.id, 'DELETE'); load(); } catch (e) { note(e.message); } } }));
+      mem.append(row);
+    });
+    const opts = (first) => [el('option', { value: first[0], textContent: first[1] })].concat(users.map((u) => el('option', { value: u.id, textContent: u.name })));
+    const w = $('who'), wv = w.value; w.replaceChildren(...opts(['', 'Unassigned'])); w.value = wv;
+    const p = $('pf'); p.replaceChildren(...[el('option', { value: 'all', textContent: 'Everyone' }), el('option', { value: 'none', textContent: 'Unassigned' })].concat(users.map((u) => el('option', { value: u.id, textContent: u.name })))); p.value = pf;
+  }
+  const shown = tasks.filter((t) => (filter === 'all' || (filter === 'done' ? t.done : !t.done)) &&
+    (!admin || pf === 'all' || (pf === 'none' ? !t.assignee_id : String(t.assignee_id) === pf)));
+  const list = $('list'); list.replaceChildren();
+  shown.forEach((t) => {
+    const cb = el('input', { type: 'checkbox', checked: t.done, onchange: () => patch(t.id, { done: cb.checked }) });
+    cb.setAttribute('aria-label', 'Mark done');
+    const title = el('span', { className: 'title', textContent: t.text });
+    const body = el('div', { className: 'body' }, title);
+    if (admin) {
+      title.style.cursor = 'text'; title.title = 'Click to edit';
+      title.onclick = () => {
+        const inp = el('input', { type: 'text', value: t.text, style: 'width:100%;padding:4px 8px' });
+        body.replaceChild(inp, title); inp.focus(); inp.select();
+        let done = false; const fin = (ok) => { if (done) return; done = true; const v = inp.value.trim(); ok && v && v !== t.text ? patch(t.id, { text: v }) : render(); };
+        inp.onkeydown = (e) => { if (e.key === 'Enter') fin(true); if (e.key === 'Escape') fin(false); };
+        inp.onblur = () => fin(true);
+      };
+    }
+    if (t.due) { const late = !t.done && t.due < today(); body.append(el('span', { className: 'due' + (late ? ' late' : ''), textContent: (late ? 'Overdue \u00b7 ' : 'Due ') + fmt(t.due) })); }
+    const li = el('li', { className: t.done ? 'done' : '' }, cb, body);
+    li.dataset.p = t.priority;
+    if (admin) {
+      const sel = el('select', { onchange: () => patch(t.id, { assignee_id: sel.value || null }) },
+        el('option', { value: '', textContent: 'Unassigned' }), ...users.map((u) => el('option', { value: u.id, textContent: u.name })));
+      sel.value = t.assignee_id || ''; sel.setAttribute('aria-label', 'Assignee');
+      li.append(sel, el('button', { className: 'x', innerHTML: '&times;', ariaLabel: 'Delete task', onclick: async () => { try { await api('/api/tasks?id=' + t.id, 'DELETE'); load(); } catch (e) { note(e.message); } } }));
+    }
+    list.append(li);
+  });
+  if (!shown.length) list.append(el('li', { className: 'empty', textContent: tasks.length ? 'Nothing in this view.' : (admin ? 'No tasks yet. Register people, then create a task.' : 'Nothing is assigned to you yet.') }));
+  const open = tasks.filter((t) => !t.done).length;
+  $('count').textContent = open + ' to do \u00b7 ' + (tasks.length - open) + ' done';
+  $('sub').textContent = 'Signed in as ' + me.name + '. ' + (admin ? open + ' open across the team.' : open + (open === 1 ? ' task' : ' tasks') + ' assigned to you.');
+}
+async function patch(id, data) { try { await api('/api/tasks?id=' + id, 'PATCH', data); await load(); } catch (e) { note(e.message); load(); } }
+
+$('loginForm').onsubmit = async (e) => {
+  e.preventDefault(); $('lErr').textContent = '';
+  try { await api('/api/auth?action=login', 'POST', { email: $('lEmail').value, password: $('lPass').value }); me = (await api('/api/auth?action=me')).user; await start(); }
+  catch (err) { $('lErr').textContent = err.message; }
+};
+$('acceptForm').onsubmit = async (e) => {
+  e.preventDefault(); $('aErr').textContent = '';
+  try { await api('/api/auth?action=accept', 'POST', { token: new URLSearchParams(location.search).get('invite'), password: $('aPass').value }); me = (await api('/api/auth?action=me')).user; await start(); }
+  catch (err) { $('aErr').textContent = err.message; }
+};
+$('logout').onclick = async () => { await api('/api/auth?action=logout', 'POST', {}); location.reload(); };
+$('taskForm').onsubmit = async (e) => {
+  e.preventDefault(); const v = $('text').value.trim(); if (!v) return;
+  try { await api('/api/tasks', 'POST', { text: v, priority: $('prio').value, due: $('due').value, assignee_id: $('who').value || null }); $('text').value = ''; $('due').value = ''; $('text').focus(); await load(); }
+  catch (err) { note(err.message); }
+};
+$('pf').onchange = (e) => { pf = e.target.value; render(); };
+document.querySelectorAll('.tabs button').forEach((b) => { b.onclick = () => { filter = b.dataset.f; document.querySelectorAll('.tabs button').forEach((o) => o.setAttribute('aria-pressed', o === b)); render(); }; });
+$('addPerson').onclick = () => { $('regForm').reset(); $('rMsg').textContent = ''; $('rMsg').style.color = ''; $('rSave').disabled = false; $('reg').showModal(); $('rName').focus(); };
+$('rCancel').onclick = () => $('reg').close();
+$('regForm').onsubmit = async (e) => {
+  e.preventDefault(); const msg = $('rMsg'); msg.style.color = ''; msg.textContent = 'Saving and sending the invite...'; $('rSave').disabled = true;
+  try {
+    const d = await api('/api/users', 'POST', { name: $('rName').value, email: $('rEmail').value, phone: $('rPhone').value });
+    await load();
+    if (d.emailSent) { $('reg').close(); note('Invite emailed to ' + d.user.email + '.'); }
+    else { msg.textContent = 'Saved, but the invite email failed: ' + d.error + ' You can retry with Resend invite.'; $('rSave').disabled = true; }
+  } catch (err) { msg.textContent = err.message; $('rSave').disabled = false; }
+};
+boot().catch(() => { $('login').hidden = false; });
+</script>
+</body>
+</html>
