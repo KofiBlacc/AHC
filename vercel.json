@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/p/:t", "destination": "/api/photo?t=:t" }]
+  "rewrites": [
+    { "source": "/p/:t", "destination": "/api/photo?t=:t" },
+    { "source": "/dashboard", "destination": "/dashboard.html" }
+  ]
 }
