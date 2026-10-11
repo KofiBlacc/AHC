@@ -69,6 +69,8 @@ textarea{width:100%;background:var(--panel);border:1.5px solid var(--line);borde
 textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .cm{background:var(--bg);border-radius:10px;padding:8px 10px;margin-bottom:6px}
 .cm small{color:var(--muted)}.cm p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.lab{font-weight:600;font-size:.88rem}
+.clist{max-height:220px;overflow-y:auto}
 .cform{display:grid;gap:6px}
 .cform .btn{justify-self:end}
 [hidden]{display:none!important}
@@ -196,7 +198,7 @@ async function load() {
 }
 
 const STEPS = [20, 50, 70, 100];
-const tabOf = {}, drafts = {};
+const drafts = {};
 function setProgress(t, p) {
   if (p === 100) {
     if (t.needs_photo) { askPhoto(t); return; }                          // 100% needs a photo for this task
@@ -206,51 +208,45 @@ function setProgress(t, p) {
 }
 function taskPanel(t, admin) {
   const wrap = el('div', { className: 'prog' });
-  const tab = tabOf[t.id] || 'progress';
-  const tabs = el('div', { className: 'tabs', style: 'width:max-content' });
-  tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Task details');
-  const mk = (k, label) => { const b = el('button', { type: 'button', textContent: label, onclick: () => { tabOf[t.id] = k; render(); } }); b.setAttribute('aria-pressed', String(tab === k)); return b; };
-  tabs.append(mk('progress', 'Progress ' + t.progress + '%'), mk('comments', 'Comments' + (t.comment_count ? ' (' + t.comment_count + ')' : '')));
-  wrap.append(tabs);
-  if (tab === 'progress') {
-    const m = el('div', { className: 'meter' }, el('i')); m.firstChild.style.width = t.progress + '%';
-    m.setAttribute('role', 'img'); m.setAttribute('aria-label', t.progress + '% done');
-    wrap.append(m);
-    if (!admin) {
-      const g = el('div', { className: 'steps' }); g.setAttribute('role', 'group'); g.setAttribute('aria-label', 'Set progress');
-      STEPS.forEach((p) => { const b = el('button', { type: 'button', textContent: p + '%', disabled: t.done, onclick: () => setProgress(t, p) }); b.setAttribute('aria-pressed', String(t.progress === p)); g.append(b); });
-      wrap.append(g);
-    }
-    const meta = el('div', { className: 'meta' });
-    if (admin) {
-      meta.append(el('label', { className: 'pill' }, el('input', { type: 'checkbox', checked: t.needs_photo, onchange: (e) => patch(t.id, { needs_photo: e.target.checked }) }), 'Photo required'));
-    } else if (t.done) meta.append('Finished.');
-    else meta.append(t.needs_photo ? 'A photo is needed to finish this task (at 100%).' : 'No photo needed for this task.');
-    wrap.append(meta);
-  } else {
-    const box = el('div'); wrap.append(box);
-    commentsInto(t, box);
-    const ta = el('textarea', { placeholder: 'What is left to do?', maxLength: 1000, value: drafts[t.id] || '', oninput: () => { drafts[t.id] = ta.value; } });
-    ta.setAttribute('aria-label', 'Comment');
-    const err = el('p', { className: 'err', style: 'margin:0' }); err.setAttribute('role', 'alert');
-    const post = el('button', { type: 'button', className: 'btn', textContent: 'Post comment', onclick: async () => {
-      const v = ta.value.trim(); if (!v) return;
-      post.disabled = true; err.textContent = '';
-      try { await api('/api/comments?task=' + t.id, 'POST', { body: v }); drafts[t.id] = ''; await load(); }
-      catch (e) { err.textContent = e.message; post.disabled = false; }
-    } });
-    wrap.append(el('div', { className: 'cform' }, ta, err, post));
+
+  // Progress
+  wrap.append(el('div', { className: 'lab' }, 'Progress', el('span', { className: 'due', textContent: ' \u00b7 ' + t.progress + '%' })));
+  const m = el('div', { className: 'meter' }, el('i')); m.firstChild.style.width = t.progress + '%';
+  m.setAttribute('role', 'img'); m.setAttribute('aria-label', t.progress + '% done');
+  wrap.append(m);
+  if (!admin) {
+    const g = el('div', { className: 'steps' }); g.setAttribute('role', 'group'); g.setAttribute('aria-label', 'Set progress');
+    STEPS.forEach((p) => { const b = el('button', { type: 'button', textContent: p + '%', disabled: t.done, onclick: () => setProgress(t, p) }); b.setAttribute('aria-pressed', String(t.progress === p)); g.append(b); });
+    wrap.append(g);
   }
+  const meta = el('div', { className: 'meta' });
+  if (admin) {
+    meta.append(el('label', { className: 'pill' }, el('input', { type: 'checkbox', checked: t.needs_photo, onchange: (e) => patch(t.id, { needs_photo: e.target.checked }) }), 'Photo required'));
+  } else if (t.done) meta.append('Finished.');
+  else meta.append(t.needs_photo ? 'A photo is needed to finish this task (at 100%).' : 'No photo needed for this task.');
+  wrap.append(meta);
+
+  // Comments, directly below the progress
+  wrap.append(el('div', { className: 'lab', style: 'margin-top:4px' }, 'Comments', el('span', { className: 'due', textContent: t.comment_count ? ' \u00b7 ' + t.comment_count : '' })));
+  const list = el('div', { className: 'clist' });
+  const cs = t.comments || [];
+  if (t.comment_count > cs.length) list.append(el('p', { className: 'due', textContent: 'Showing the latest ' + cs.length + ' of ' + t.comment_count + ' comments.' }));
+  if (cs.length) cs.forEach((c) => list.append(el('div', { className: 'cm' },
+    el('small', { textContent: (c.author_name || 'Someone') + ' \u00b7 ' + new Date(c.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) }),
+    el('p', { textContent: c.body }))));
+  else list.append(el('p', { className: 'due', textContent: 'No comments yet.' }));
+  wrap.append(list);
+  const ta = el('textarea', { placeholder: 'What is left to do?', maxLength: 1000, value: drafts[t.id] || '', oninput: () => { drafts[t.id] = ta.value; } });
+  ta.setAttribute('aria-label', 'Comment on ' + t.text);
+  const err = el('p', { className: 'err', style: 'margin:0' }); err.setAttribute('role', 'alert');
+  const post = el('button', { type: 'button', className: 'btn', textContent: 'Post comment', onclick: async () => {
+    const v = ta.value.trim(); if (!v) return;
+    post.disabled = true; err.textContent = '';
+    try { await api('/api/comments?task=' + t.id, 'POST', { body: v }); drafts[t.id] = ''; await load(); }
+    catch (e) { err.textContent = e.message; post.disabled = false; }
+  } });
+  wrap.append(el('div', { className: 'cform' }, ta, err, post));
   return wrap;
-}
-async function commentsInto(t, box) {
-  box.append(el('p', { className: 'due', textContent: 'Loading comments...' }));
-  try {
-    const d = await api('/api/comments?task=' + t.id);
-    box.replaceChildren(...(d.comments.length ? d.comments.map((c) => el('div', { className: 'cm' },
-      el('small', { textContent: (c.author_name || 'Someone') + ' \u00b7 ' + new Date(c.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) }),
-      el('p', { textContent: c.body }))) : [el('p', { className: 'due', textContent: 'No comments yet.' })]));
-  } catch (e) { box.replaceChildren(el('p', { className: 'err', textContent: e.message })); }
 }
 
 function render() {

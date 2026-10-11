@@ -14,12 +14,20 @@ export default async function handler(req, res) {
       const rows = isAdmin
         ? await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.progress, t.needs_photo, t.assignee_id, u.name as assignee_name,
             exists(select 1 from task_photos p where p.task_id = t.id) as has_photo,
-            (select count(*)::int from task_comments c where c.task_id = t.id) as comment_count
+            (select count(*)::int from task_comments c where c.task_id = t.id) as comment_count,
+            (select coalesce(json_agg(r order by r.created_at, r.id), '[]'::json) from (
+               select c.id, c.body, c.created_at, cu.name as author_name
+               from task_comments c left join users cu on cu.id = c.author_id
+               where c.task_id = t.id order by c.created_at desc, c.id desc limit 30) r) as comments
             from tasks t left join users u on u.id = t.assignee_id
             order by t.done, case t.priority when 'high' then 0 when 'med' then 1 else 2 end, t.due nulls last, t.id`
         : await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.progress, t.needs_photo, t.assignee_id, u.name as assignee_name,
             exists(select 1 from task_photos p where p.task_id = t.id) as has_photo,
-            (select count(*)::int from task_comments c where c.task_id = t.id) as comment_count
+            (select count(*)::int from task_comments c where c.task_id = t.id) as comment_count,
+            (select coalesce(json_agg(r order by r.created_at, r.id), '[]'::json) from (
+               select c.id, c.body, c.created_at, cu.name as author_name
+               from task_comments c left join users cu on cu.id = c.author_id
+               where c.task_id = t.id order by c.created_at desc, c.id desc limit 30) r) as comments
             from tasks t left join users u on u.id = t.assignee_id
             where t.assignee_id = ${me.id}
             order by t.done, case t.priority when 'high' then 0 when 'med' then 1 else 2 end, t.due nulls last, t.id`;
