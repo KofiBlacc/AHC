@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   const id = Number(req.query.id);
   if (!Number.isInteger(id)) return json(res, 400, { error: 'Bad task id.' });
   try {
-    const [t] = await sql`select id, assignee_id from tasks where id = ${id}`;
+    const [t] = await sql`select id, assignee_id, done from tasks where id = ${id}`;
     // Only the assignee or an admin may see or add evidence for a task.
     if (!t || (me.role !== 'admin' && t.assignee_id !== me.id)) return json(res, 404, { error: 'Task not found.' });
 
@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      if (t.done && me.role !== 'admin') return json(res, 403, { error: 'This task is already finished.' });
       const raw = String((req.body || {}).image || '').replace(/^data:[^;]+;base64,/, '');
       if (!raw || raw.length > MAX_BYTES * 1.4) return json(res, 413, { error: 'Photo is too large.' });
       const buf = Buffer.from(raw, 'base64');
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
             values (${id}, ${mime}, decode(${buf.toString('base64')}, 'base64'), ${me.id}, ${token})
             on conflict (task_id) do update
             set mime = excluded.mime, data = excluded.data, uploaded_by = excluded.uploaded_by, view_token = excluded.view_token, uploaded_at = now()`,
-        sql`update tasks set done = true where id = ${id}`,
+        sql`update tasks set done = true, progress = 100 where id = ${id}`,
       ]);
       // Tell the notification recipients (awaited, because serverless functions can stop right after responding).
       const [info] = await sql`select text from tasks where id = ${id}`;

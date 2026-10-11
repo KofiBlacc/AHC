@@ -9,10 +9,11 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
   const tz = process.env.APP_TIMEZONE && tzOk(process.env.APP_TIMEZONE) ? process.env.APP_TIMEZONE : 'UTC';
   try {
-    const [totals, people, unassigned, priorities, days, overdue, recent] = await Promise.all([
+    const [totals, people, unassigned, priorities, days, overdue, recent, comments] = await Promise.all([
       sql`select count(*)::int as total,
                  count(*) filter (where done)::int as done,
                  count(*) filter (where not done)::int as open,
+                 count(*) filter (where not done and progress > 0)::int as started,
                  count(*) filter (where not done and due < current_date)::int as overdue
           from tasks`,
       sql`select u.id, u.name,
@@ -41,6 +42,9 @@ export default async function handler(req, res) {
       sql`select t.id, t.text, u.name as assignee_name, p.uploaded_at as done_at
           from task_photos p join tasks t on t.id = p.task_id left join users u on u.id = t.assignee_id
           where t.done order by p.uploaded_at desc limit 10`,
+      sql`select c.body, c.created_at, t.text as task_text, u.name as author_name
+          from task_comments c join tasks t on t.id = c.task_id left join users u on u.id = c.author_id
+          order by c.created_at desc limit 8`,
     ]);
 
     const byDay = Object.fromEntries(days.map((d) => [d.day, d.n]));
@@ -52,7 +56,7 @@ export default async function handler(req, res) {
     const rows = people.slice();
     if (unassigned[0] && unassigned[0].assigned > 0) rows.push({ id: null, name: 'Unassigned', ...unassigned[0] });
 
-    return json(res, 200, { totals: totals[0], people: rows, priorities, daily, overdue, recent, tz });
+    return json(res, 200, { totals: totals[0], people: rows, priorities, daily, overdue, recent, comments, tz });
   } catch (e) {
     console.error('stats failed:', e.message);
     return json(res, 500, { error: 'Server error.' });

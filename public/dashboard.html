@@ -90,6 +90,7 @@ dialog h2{margin:0 0 4px;font-size:1.3rem}
     </div>
 
     <section class="card" aria-labelledby="hRecent"><h2 id="hRecent">Recently completed</h2><ul id="recent"></ul></section>
+    <section class="card" aria-labelledby="hComm"><h2 id="hComm">Latest comments</h2><ul id="comments"></ul></section>
   </div>
 </main>
 
@@ -131,7 +132,7 @@ function drawChart(daily) {
 
 function render(d) {
   const t = d.totals;
-  $('kpis').replaceChildren(kpi('Total tasks', t.total), kpi('Done', t.done), kpi('Open', t.open), kpi('Overdue', t.overdue, t.overdue > 0), kpi('Completion', pct(t.done, t.total) + '%'));
+  $('kpis').replaceChildren(kpi('Total tasks', t.total), kpi('Done', t.done), kpi('In progress', t.started), kpi('Open', t.open), kpi('Overdue', t.overdue, t.overdue > 0), kpi('Completion', pct(t.done, t.total) + '%'));
   drawChart(d.daily);
 
   $('people').replaceChildren(...(d.people.length ? d.people.map((p) => {
@@ -155,6 +156,10 @@ function render(d) {
     el('div', { className: 't' }, r.text, el('small', { textContent: (r.assignee_name || 'Unassigned') + ' - ' + fmtTime(r.done_at) })),
     el('button', { className: 'mini', textContent: 'View photo', onclick: () => { $('vTitle').textContent = r.text; $('vImg').src = '/api/evidence?id=' + r.id + '&t=' + Date.now(); $('viewDlg').showModal(); } })))
     : [el('p', { className: 'empty', textContent: 'No completed tasks yet.' })]));
+
+  $('comments').replaceChildren(...(d.comments.length ? d.comments.map((c) => el('li', { className: 'item' },
+    el('div', { className: 't' }, c.body, el('small', { textContent: (c.author_name || 'Someone') + ' on "' + c.task_text + '" - ' + fmtTime(c.created_at) }))))
+    : [el('p', { className: 'empty', textContent: 'No comments yet.' })]));
 
   $('sub').textContent = 'Updated ' + new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + '. Refreshes every minute.';
   $('board').hidden = false;
