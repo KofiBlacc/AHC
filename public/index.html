@@ -82,7 +82,7 @@ dialog h2{margin:0 0 4px;font-size:1.3rem}
   </section>
 
   <section id="app" hidden>
-    <nav class="nav" id="nav" aria-label="Pages" hidden><a href="/" aria-current="page">Admin</a><a href="/dashboard.html">Dashboard</a></nav>
+    <nav class="nav" id="nav" aria-label="Pages" hidden><a href="/dashboard">Dashboard</a><a href="/tasks" aria-current="page">Task</a></nav>
     <div class="top"><p class="sub" id="sub" style="margin:0"></p><button class="mini" id="logout">Sign out</button></div>
     <p class="err" id="note" role="status"></p>
 
@@ -126,7 +126,7 @@ dialog h2{margin:0 0 4px;font-size:1.3rem}
 <dialog id="photoDlg">
   <h2>Add photo evidence</h2>
   <p class="due" id="pTask"></p>
-  <label for="pFile">Take or choose a photo</label>
+  <label for="pFile" id="pLab">Take or choose a photo</label>
   <input type="file" id="pFile" accept="image/*">
   <img id="pPrev" alt="Preview of your photo" hidden style="width:100%;margin-top:12px;border-radius:10px">
   <p class="err" id="pErr" role="alert"></p>
@@ -165,6 +165,7 @@ async function boot() {
 async function start() {
   $('login').hidden = true; $('accept').hidden = true; $('app').hidden = false;
   const admin = me.role === 'admin';
+  if (admin && location.pathname === '/') { location.replace('/dashboard'); return; }
   $('nav').hidden = !admin; $('team').hidden = !admin; $('taskForm').hidden = !admin; $('pf').hidden = !admin;
   history.replaceState(null, '', location.pathname);
   await load();
@@ -239,6 +240,10 @@ function render() {
   $('sub').textContent = 'Signed in as ' + me.name + '. ' + (admin ? open + ' open across the team.' : open + (open === 1 ? ' task' : ' tasks') + ' assigned to you.');
 }
 let pendingTask = null, pendingImage = null;
+if (/Android/i.test(navigator.userAgent)) {   // Android: open the rear camera directly instead of the file picker
+  $('pFile').setAttribute('capture', 'environment');
+  $('pLab').textContent = 'Take a photo';
+}
 function askPhoto(t) {
   pendingTask = t; pendingImage = null;
   $('pFile').value = ''; $('pPrev').hidden = true; $('pErr').textContent = ''; $('pSave').disabled = true;
