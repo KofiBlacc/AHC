@@ -467,7 +467,7 @@ setInterval(() => { if (lastRefresh) $('countdown').textContent = 'Live · ' + M
 (async () => {
   try {
     const d = await api('/api/auth?action=me');
-    if (!d.user || d.user.role !== 'admin') { location.href = '/'; return; }
+    if (!d.user || !['admin', 'viewer'].includes(d.user.role)) { location.href = '/'; return; }
   } catch (e) { location.href = '/'; return; }
   await refresh();
   setInterval(() => { if (!document.hidden) refresh(); }, REFRESH_MS);

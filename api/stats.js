@@ -4,7 +4,7 @@ import { sql, json, guard } from '../lib/common.js';
 const tzOk = (tz) => { try { new Intl.DateTimeFormat('en-CA', { timeZone: tz }); return true; } catch (e) { return false; } };
 
 export default async function handler(req, res) {
-  const me = await guard(req, res, { admin: true });
+  const me = await guard(req, res, { staff: true });
   if (!me) return;
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
   const tz = process.env.APP_TIMEZONE && tzOk(process.env.APP_TIMEZONE) ? process.env.APP_TIMEZONE : 'UTC';

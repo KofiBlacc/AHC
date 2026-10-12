@@ -8,7 +8,9 @@ export default async function handler(req, res) {
   if (!Number.isInteger(id)) return json(res, 400, { error: 'Bad task id.' });
   try {
     const [t] = await sql`select id, assignee_id from tasks where id = ${id}`;
-    if (!t || (me.role !== 'admin' && t.assignee_id !== me.id)) return json(res, 404, { error: 'Task not found.' });
+    const staff = me.role === 'admin' || me.role === 'viewer';
+    if (me.role === 'viewer' && req.method !== 'GET') return json(res, 403, { error: 'Viewers have read-only access.' });
+    if (!t || (!staff && t.assignee_id !== me.id)) return json(res, 404, { error: 'Task not found.' });
 
     if (req.method === 'GET') {
       const rows = await sql`select c.id, c.body, c.created_at, u.name as author_name

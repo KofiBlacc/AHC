@@ -19,7 +19,9 @@ export default async function handler(req, res) {
   try {
     const [t] = await sql`select id, assignee_id, done from tasks where id = ${id}`;
     // Only the assignee or an admin may see or add evidence for a task.
-    if (!t || (me.role !== 'admin' && t.assignee_id !== me.id)) return json(res, 404, { error: 'Task not found.' });
+    const staff = me.role === 'admin' || me.role === 'viewer';
+    if (me.role === 'viewer' && req.method !== 'GET') return json(res, 403, { error: 'Viewers have read-only access.' });
+    if (!t || (!staff && t.assignee_id !== me.id)) return json(res, 404, { error: 'Task not found.' });
 
     if (req.method === 'GET') {
       const [p] = await sql`select mime, encode(data, 'base64') as b64 from task_photos where task_id = ${id}`;

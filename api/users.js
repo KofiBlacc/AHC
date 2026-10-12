@@ -35,8 +35,9 @@ export default async function handler(req, res) {
       const digits = phone.replace(/\D/g, '');
       if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json(res, 400, { error: 'Enter a name and a valid email.' });
       if (!PHONE.test(phone) || digits.length < 7 || digits.length > 15) return json(res, 400, { error: 'Enter a valid mobile number.' });
+      const role = b.role === 'viewer' ? 'viewer' : 'member'; // admins are only created by the first-login setup
       let user;
-      try { [user] = await sql`insert into users (name, email, phone) values (${name}, ${email}, ${phone}) returning id, name, email`; }
+      try { [user] = await sql`insert into users (name, email, phone, role) values (${name}, ${email}, ${phone}, ${role}) returning id, name, email, role`; }
       catch (e) { return json(res, 409, { error: /duplicate key/.test(e.message) ? 'That email is already registered.' : 'Could not save.' }); }
       try { await sendInvite(user); return json(res, 201, { user, emailSent: true }); }
       catch (e) { return json(res, 201, { user, emailSent: false, error: e.message }); }

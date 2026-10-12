@@ -279,6 +279,7 @@ dialog .sub{font-size:.9rem;margin:0}
           <label for="rName">Name</label><input id="rName" type="text" required autocomplete="off">
           <label for="rEmail">Email</label><input id="rEmail" type="email" required autocomplete="off">
           <label for="rPhone">Mobile number</label><input id="rPhone" type="tel" required autocomplete="off" placeholder="+1 555 010 0199">
+          <label for="rRole">Access</label><select id="rRole"><option value="member">Team member: works on assigned tasks</option><option value="viewer">Viewer: sees the dashboard and all tasks, read-only</option></select>
           <p class="err" id="rMsg" role="status"></p>
           <div class="acts"><button type="button" class="ghost" id="rCancel">Cancel</button><button class="btn" id="rSave" type="submit">Save and send invite</button></div>
         </form>
@@ -367,18 +368,20 @@ async function boot() {
 }
 async function start() {
   $('login').hidden = true; $('accept').hidden = true; $('app').hidden = false;
-  const admin = me.role === 'admin';
-  if (admin && location.pathname === '/') { location.replace('/dashboard'); return; }
-  $('nav').hidden = !admin; $('team').hidden = !admin; $('taskForm').hidden = !admin; $('taskBoard').hidden = !admin; $('pf').hidden = !admin;
-  $('pageTitle').textContent = admin ? 'Tasks' : 'My tasks';
-  $('meName').textContent = me.name || ''; $('meRole').textContent = admin ? 'Administrator' : 'Team member'; $('av').textContent = initials(me.name);
+  const admin = me.role === 'admin', viewer = me.role === 'viewer', staff = admin || viewer;
+  if (staff && location.pathname === '/') { location.replace('/dashboard'); return; }
+  $('nav').hidden = !staff; $('team').hidden = !admin; $('taskForm').hidden = !admin; $('taskBoard').hidden = !admin; $('pf').hidden = !staff;
+  $('pageTitle').textContent = staff ? 'Tasks' : 'My tasks';
+  $('meName').textContent = me.name || ''; $('meRole').textContent = admin ? 'Administrator' : viewer ? 'Viewer' : 'Team member'; $('av').textContent = initials(me.name);
   history.replaceState(null, '', location.pathname);
   await load();
 }
 async function load() {
   try {
     const [t, u] = await Promise.all([api('/api/tasks'), me.role === 'admin' ? api('/api/users') : { users: [] }]);
-    tasks = t.tasks; users = u.users; render();
+    tasks = t.tasks; users = u.users;
+    if (me.role === 'viewer') { const seen = new Map(); tasks.forEach((x) => { if (x.assignee_id) seen.set(x.assignee_id, x.assignee_name || 'Person ' + x.assignee_id); }); users = [...seen].map(([id, name]) => ({ id, name })); }
+    render();
   } catch (e) { if (e.status === 401) location.reload(); else note(e.message); }
 }
 
@@ -399,7 +402,7 @@ function track(p, big) {
   tr.setAttribute('role', 'img'); tr.setAttribute('aria-label', p + '% done');
   return tr;
 }
-function taskPanel(t, admin) {
+function taskPanel(t, admin, readonly) {
   const wrap = el('div', { className: 'detail' });
 
   if (admin) {
@@ -420,7 +423,7 @@ function taskPanel(t, admin) {
 
   // Progress
   const pg = el('div', { className: 'dgroup' }, el('div', { className: 'dlab' }, el('span', { textContent: 'Progress' }), el('b', { textContent: t.progress + '%' })), track(t.progress, true));
-  if (!admin) {
+  if (!admin && !readonly) {
     const g = el('div', { className: 'steps' }); g.setAttribute('role', 'group'); g.setAttribute('aria-label', 'Set progress');
     STEPS.forEach((p) => { const b = el('button', { type: 'button', textContent: p + '%', disabled: t.done, onclick: () => setProgress(t, p) }); b.setAttribute('aria-pressed', String(t.progress === p)); g.append(b); });
     pg.append(g);
@@ -448,18 +451,19 @@ function taskPanel(t, admin) {
     try { await api('/api/comments?task=' + t.id, 'POST', { body: v }); drafts[t.id] = ''; expanded.set(t.id, true); await load(); }
     catch (e) { err.textContent = e.message; post.disabled = false; }
   } });
-  cg.append(el('div', { className: 'cform' }, ta, err, post));
+  if (!readonly) cg.append(el('div', { className: 'cform' }, ta, err, post));
   wrap.append(cg);
   return wrap;
 }
 
 function render() {
-  const admin = me.role === 'admin';
+  const admin = me.role === 'admin', viewer = me.role === 'viewer', staff = admin || viewer;
   if (admin) {
     const mem = $('members'); mem.replaceChildren();
     users.forEach((u) => {
       const info = el('div', { className: 'info' }, el('strong', { textContent: u.name }),
         el('span', { className: 'status ' + (u.invited ? 'inv' : 'act'), textContent: u.invited ? 'Invited' : 'Active' }),
+        ...(u.role === 'viewer' ? [el('span', { className: 'status', style: 'background:var(--accent-soft);color:var(--accent);margin-left:6px', textContent: 'Viewer' })] : []),
         el('div', { textContent: u.email + (u.phone ? ', ' + u.phone : '') }));
       const row = el('div', { className: 'reg' }, info);
       if (u.invited) row.append(el('button', { className: 'mini', textContent: 'Resend invite', onclick: async (ev) => {
@@ -473,12 +477,14 @@ function render() {
     });
     if (!users.length) mem.append(el('p', { className: 'due', style: 'padding:14px 18px', textContent: 'No team members yet.' }));
     $('teamCount').textContent = users.length === 1 ? '1 person' : users.length + ' people';
-    const opts = (first) => [el('option', { value: first[0], textContent: first[1] })].concat(users.map((u) => el('option', { value: u.id, textContent: u.name })));
+    const opts = (first) => [el('option', { value: first[0], textContent: first[1] })].concat(users.filter((u) => u.role !== 'viewer').map((u) => el('option', { value: u.id, textContent: u.name })));
     const w = $('who'), wv = w.value; w.replaceChildren(...opts(['', 'Unassigned'])); w.value = wv;
-    const p = $('pf'); p.replaceChildren(...[el('option', { value: 'all', textContent: 'Everyone' }), el('option', { value: 'none', textContent: 'Unassigned' })].concat(users.map((u) => el('option', { value: u.id, textContent: u.name })))); p.value = pf;
+  }
+  if (staff) {
+    const p = $('pf'); p.replaceChildren(...[el('option', { value: 'all', textContent: 'Everyone' }), el('option', { value: 'none', textContent: 'Unassigned' })].concat(users.filter((u) => u.role !== 'viewer').map((u) => el('option', { value: u.id, textContent: u.name })))); p.value = pf;
   }
   const shown = tasks.filter((t) => (filter === 'all' || (filter === 'done' ? t.done : !t.done)) &&
-    (!admin || pf === 'all' || (pf === 'none' ? !t.assignee_id : String(t.assignee_id) === pf)));
+    (!staff || pf === 'all' || (pf === 'none' ? !t.assignee_id : String(t.assignee_id) === pf)));
   const list = $('list'); list.replaceChildren();
   const td = today();
   shown.forEach((t) => {
@@ -520,7 +526,7 @@ function render() {
       const txt = t.done ? 'Due ' + fmt(t.due) : late ? (-d === 1 ? '1 day' : -d + ' days') + ' overdue' : d === 0 ? 'Due today' : d === 1 ? 'Due tomorrow' : 'Due ' + fmt(t.due);
       meta.append(el('span', { className: late ? 'late' : '' }, svg(ICON.cal), txt));
     }
-    if (admin) { const u = users.find((x) => String(x.id) === String(t.assignee_id)); meta.append(el('span', {}, svg(ICON.user), u ? u.name : 'Unassigned')); }
+    if (staff) { const u = users.find((x) => String(x.id) === String(t.assignee_id)); meta.append(el('span', {}, svg(ICON.user), u ? u.name : 'Unassigned')); }
     if (t.needs_photo && !t.done) meta.append(el('span', {}, svg(ICON.cam), 'Photo required'));
     if (t.has_photo) meta.append(el('span', {}, svg(ICON.img), 'Photo attached'));
     if (t.comment_count) meta.append(el('span', {}, svg(ICON.msg), String(t.comment_count)));
@@ -528,22 +534,22 @@ function render() {
     main.append(tmain);
 
     main.append(el('div', { className: 'mprog' }, track(t.progress), el('span', { textContent: t.progress + '%' })));
-    const open = isOpen(t, admin);
+    const open = isOpen(t, staff);
     const exp = el('button', { type: 'button', className: 'exp', ariaLabel: (open ? 'Hide' : 'Show') + ' details for ' + t.text }, svg(ICON.chev));
     exp.setAttribute('aria-expanded', String(open));
     main.append(exp);
-    const toggle = () => { expanded.set(t.id, !isOpen(t, admin)); render(); };
+    const toggle = () => { expanded.set(t.id, !isOpen(t, staff)); render(); };
     exp.onclick = (e) => { e.stopPropagation(); toggle(); };
     main.onclick = (e) => { if (e.target.closest('input,button,select,label,a') || (admin && e.target.closest('.title'))) return; toggle(); };
 
     li.append(main);
-    if (open) { li.classList.add('open'); li.append(taskPanel(t, admin)); }
+    if (open) { li.classList.add('open'); li.append(taskPanel(t, admin, viewer)); }
     list.append(li);
   });
-  if (!shown.length) list.append(el('li', { className: 'empty', textContent: tasks.length ? 'Nothing in this view.' : (admin ? 'No tasks yet. Add your team members, then create a task.' : 'Nothing is assigned to you yet.') }));
+  if (!shown.length) list.append(el('li', { className: 'empty', textContent: tasks.length ? 'Nothing in this view.' : (admin ? 'No tasks yet. Add your team members, then create a task.' : viewer ? 'No tasks yet.' : 'Nothing is assigned to you yet.') }));
   const open = tasks.filter((t) => !t.done).length;
   $('count').textContent = open + ' to do, ' + (tasks.length - open) + ' done';
-  $('sub').textContent = admin ? open + ' open across the team.' : 'Signed in as ' + me.name + '. ' + open + (open === 1 ? ' task' : ' tasks') + ' assigned to you.';
+  $('sub').textContent = staff ? open + ' open across the team' + (viewer ? ' (view only).' : '.') : 'Signed in as ' + me.name + '. ' + open + (open === 1 ? ' task' : ' tasks') + ' assigned to you.';
 }
 let pendingTask = null, pendingImage = null;
 if (/Android/i.test(navigator.userAgent)) {   // Android: open the rear camera directly instead of the file picker
@@ -618,7 +624,7 @@ $('rCancel').onclick = () => $('reg').close();
 $('regForm').onsubmit = async (e) => {
   e.preventDefault(); const msg = $('rMsg'); msg.style.color = ''; msg.textContent = 'Saving and sending the invite...'; $('rSave').disabled = true;
   try {
-    const d = await api('/api/users', 'POST', { name: $('rName').value, email: $('rEmail').value, phone: $('rPhone').value });
+    const d = await api('/api/users', 'POST', { name: $('rName').value, email: $('rEmail').value, phone: $('rPhone').value, role: $('rRole').value });
     await load();
     if (d.emailSent) { $('reg').close(); note('Invite emailed to ' + d.user.email + '.'); }
     else { msg.textContent = 'Saved, but the invite email failed: ' + d.error + ' You can retry with Resend invite.'; $('rSave').disabled = true; }

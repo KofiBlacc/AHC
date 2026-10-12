@@ -4,14 +4,24 @@ import { notifyTaskDone } from '../lib/notify.js';
 const PRIOS = ['high', 'med', 'low'];
 const STEPS = [0, 20, 50, 70, 100];
 
+// Only registered people who do tasks can be assigned (viewers only look).
+async function badAssignee(id) {
+  const [u] = await sql`select role from users where id = ${id}`;
+  if (!u) return 'That person does not exist.';
+  if (u.role === 'viewer') return 'Viewers cannot be assigned tasks.';
+  return null;
+}
+
 export default async function handler(req, res) {
   const me = await guard(req, res);
   if (!me) return;
   const isAdmin = me.role === 'admin';
+  const seesAll = isAdmin || me.role === 'viewer';
+  if (me.role === 'viewer' && req.method !== 'GET') return json(res, 403, { error: 'Viewers have read-only access.' });
   try {
     if (req.method === 'GET') {
       // Members only ever receive tasks assigned to them; this is enforced here, in the query.
-      const rows = isAdmin
+      const rows = seesAll
         ? await sql`select t.id, t.text, t.priority, to_char(t.due,'YYYY-MM-DD') as due, t.done, t.progress, t.needs_photo, t.assignee_id, u.name as assignee_name,
             exists(select 1 from task_photos p where p.task_id = t.id) as has_photo,
             (select count(*)::int from task_comments c where c.task_id = t.id) as comment_count,
@@ -57,6 +67,7 @@ export default async function handler(req, res) {
       const needsPhoto = b.needs_photo !== undefined ? !!b.needs_photo : t.needs_photo;
       const done = b.done !== undefined ? !!b.done : t.done;
       if (!text) return json(res, 400, { error: 'Task text is required.' });
+      if (assignee && assignee !== t.assignee_id && (await badAssignee(assignee))) return json(res, 400, { error: await badAssignee(assignee) });
       let progress = t.progress;
       if (b.progress !== undefined && STEPS.includes(Number(b.progress)) && Number(b.progress) < 100) progress = Number(b.progress);
       let notify = null;
@@ -84,6 +95,7 @@ export default async function handler(req, res) {
       const due = /^\d{4}-\d{2}-\d{2}$/.test(b.due || '') ? b.due : null;
       const assignee = b.assignee_id ? Number(b.assignee_id) : null;
       const needsPhoto = b.needs_photo !== false;
+      if (assignee && (await badAssignee(assignee))) return json(res, 400, { error: await badAssignee(assignee) });
       await sql`insert into tasks (text, priority, due, assignee_id, needs_photo) values (${text}, ${priority}, ${due}::date, ${assignee}, ${needsPhoto})`;
       return json(res, 201, { ok: true });
     }
