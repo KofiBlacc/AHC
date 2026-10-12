@@ -4,107 +4,226 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Dashboard - Task list</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
 <style>
-:root{--bg:#eef2f6;--panel:#fff;--ink:#14213d;--muted:#6b7890;--line:#d9e0ea;--accent:#2f5bea;--on:#fff;--mark:#ffe14d;--hi:#e5484d;--md:#f0a020;--lo:#3aa675}
-@media (prefers-color-scheme:dark){:root{--bg:#10151f;--panel:#182030;--ink:#e8edf6;--muted:#8d9ab0;--line:#2a3548;--accent:#6f93ff;--on:#10151f;--mark:#8a7a1c}}
+:root{
+  color-scheme:light;
+  --paper:#e6e9ef;--card:#ffffff;--ink:#1b2340;--ink2:#545d7a;--line:#cfd4df;
+  --yellow:#ffc727;--red:#d7263d;--green:#1f8a5b;--blue:#3b5bdb;--open:#bcc3d2;
+  --band:#1b2340;--band-ink:#f4f5f8;--stripe:#1b2340;
+  --font:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  color-scheme:dark;
+  --paper:#10162b;--card:#18203d;--ink:#eef0f6;--ink2:#a2a9c1;--line:#2b3559;
+  --red:#ff5a6d;--green:#3ccb8a;--blue:#8399ff;--open:#3a4470;
+  --band:#0a0f22;--band-ink:#eef0f6;--stripe:#0a0f22;
+}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
-h1{font-size:2.4rem;line-height:1.1;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
-h1 span{background:linear-gradient(transparent 62%,var(--mark) 62%)}
-h2{font-size:1.05rem;margin:0 0 10px}
-.sub{color:var(--muted);margin:0 0 16px}
-button{font:inherit;color:inherit}
-button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.mini{background:none;border:1.5px solid var(--line);border-radius:8px;padding:3px 10px;font-size:.82rem;cursor:pointer}
-.ghost{background:none;border:1.5px solid var(--line);border-radius:10px;padding:10px 18px;cursor:pointer}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.nav{display:flex;gap:4px;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:3px}
-.nav a{border-radius:7px;padding:5px 14px;color:var(--muted);font-weight:600;text-decoration:none}
-.nav a[aria-current=page]{background:var(--accent);color:var(--on)}
-.actions{display:flex;gap:8px;align-items:center}
-.card{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px}
-.kpi b{display:block;font-size:2rem;line-height:1.1;font-weight:800}
-.kpi span{color:var(--muted);font-size:.85rem}
-.kpi.bad b{color:var(--hi)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media (max-width:760px){.grid{grid-template-columns:1fr}}
-.scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.92rem}
-th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:middle}
-th{border-top:0;color:var(--muted);font-weight:600;font-size:.8rem}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-.late{color:var(--hi);font-weight:600}
-.meter{height:8px;background:var(--line);border-radius:99px;overflow:hidden;min-width:70px}
-.meter i{display:block;height:100%;background:var(--lo)}
-.rows{display:grid;gap:10px}
-.row{display:grid;grid-template-columns:90px 1fr 56px;gap:10px;align-items:center;font-size:.92rem}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
-ul{list-style:none;margin:0;padding:0}
-li.item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}
-li.item:first-child{border-top:0}
-.item .t{min-width:0;overflow-wrap:anywhere}.item small{display:block;color:var(--muted)}
-.empty{color:var(--muted);margin:0}
-.err{color:var(--hi);min-height:1.3em;margin:0 0 8px;font-size:.9rem}
-svg{width:100%;height:auto;display:block}
-svg text{fill:var(--muted);font:11px "Bricolage Grotesque",system-ui,sans-serif}
-dialog{border:1.5px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:20px;width:min(92vw,420px)}
-dialog::backdrop{background:rgba(10,15,30,.5)}
-dialog h2{margin:0 0 4px;font-size:1.3rem}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a:focus-visible,button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.hazard{background:repeating-linear-gradient(-45deg,var(--yellow) 0 7px,var(--stripe) 7px 14px)}
+
+/* top band */
+.band{background:var(--band);color:var(--band-ink)}
+.band-in{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px}
+.mark{display:flex;align-items:center;gap:10px;font-weight:800;font-stretch:115%;letter-spacing:-.01em;margin-right:auto}
+.mark i{width:26px;height:26px;background:var(--yellow);border-radius:4px;display:grid;place-items:center}
+.mark svg{width:15px;height:15px;stroke:#1b2340;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nav{display:flex;gap:4px}
+.nav a{color:color-mix(in srgb,var(--band-ink) 70%,transparent);text-decoration:none;font-weight:600;padding:6px 12px;border-radius:4px}
+.nav a:hover{color:var(--band-ink)}
+.nav a[aria-current=page]{background:var(--yellow);color:#1b2340}
+.tools{display:flex;align-items:center;gap:8px}
+.stamp-time{font-size:.85rem;color:color-mix(in srgb,var(--band-ink) 65%,transparent);white-space:nowrap}
+.bbtn{background:none;border:1px solid color-mix(in srgb,var(--band-ink) 30%,transparent);color:var(--band-ink);border-radius:4px;padding:6px 12px;font-size:.88rem;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.bbtn:hover{border-color:var(--yellow)}
+.bbtn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bbtn.busy svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tape{height:8px}
+
+main{max-width:1200px;margin:0 auto;padding:28px 16px 72px}
+.err:empty{display:none}
+.err{background:var(--card);border:2px solid var(--red);color:var(--red);font-weight:600;padding:10px 14px;border-radius:4px;margin:0 0 20px}
+
+/* hero */
+.hero{margin-bottom:28px}
+.headline{font-stretch:125%;font-weight:850;font-size:clamp(2rem,5.4vw,4rem);line-height:.98;letter-spacing:-.035em;margin:0 0 12px;max-width:16ch}
+.lede{font-size:1.1rem;color:var(--ink2);margin:0 0 26px;max-width:60ch}
+.lede b{color:var(--ink);font-weight:700}
+.lede .late{color:var(--red)}
+.stackwrap{position:relative;padding-top:26px}
+.pctmark{position:absolute;top:0;font-weight:800;font-stretch:80%;font-size:1.05rem;white-space:nowrap;transform:translateX(-100%);padding-right:6px;border-right:2px solid var(--ink);line-height:1.2;height:26px}
+.pctmark.flip{transform:none;padding:0 0 0 6px;border-right:0;border-left:2px solid var(--ink)}
+.stack{display:flex;height:56px;border-radius:4px;overflow:hidden;background:var(--open);position:relative}
+.seg{height:100%;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.seg.done{background:var(--green)}
+.seg.started{background:var(--blue)}
+.seg.open{background:var(--open)}
+.seg.over{position:absolute;right:0;top:0;transition-delay:.5s}
+.figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:18px}
+.fig b{display:block;font-stretch:62%;font-weight:850;font-size:clamp(2.6rem,6vw,4.6rem);line-height:.9;letter-spacing:-.02em}
+.fig span{display:flex;align-items:center;gap:8px;color:var(--ink2);font-weight:500;margin-top:6px}
+.fig span i{width:12px;height:12px;border-radius:2px;flex:none}
+.fig.late b{color:var(--red)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:24px;align-items:start}
+.col{display:grid;gap:24px;min-width:0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px;min-width:0}
+.ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+h2{font-stretch:112%;font-weight:800;font-size:1.15rem;letter-spacing:-.015em;margin:0}
+.note{color:var(--ink2);font-size:.92rem;margin:0}
+
+/* chart */
+#chart svg{display:block;width:100%;height:auto}
+#chart text{fill:var(--ink2);font:600 12px var(--font);font-stretch:80%}
+#chart .cnt{fill:var(--ink);font-weight:800}
+#chart .today{fill:var(--ink);font-weight:800}
+
+/* crew */
+.crew{list-style:none;margin:0;padding:0}
+.crew li{display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,1.6fr) 56px;gap:16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.crew li:first-child{border-top:0;padding-top:0}
+.crew .nm{font-weight:700;overflow-wrap:anywhere}
+.crew .nm small{display:block;font-weight:400;color:var(--ink2);font-size:.85rem}
+.crew .nm small em{font-style:normal;color:var(--red);font-weight:600}
+.cbar{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--open)}
+.cbar i{display:block;height:100%}
+.crew .pc{font-stretch:70%;font-weight:850;font-size:1.6rem;text-align:right;line-height:1}
+
+/* overdue tags */
+.tags{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.tag{position:relative;background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--red);border-radius:3px 10px 10px 3px;padding:12px 14px 12px 34px}
+.tag::before{content:"";position:absolute;left:12px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 2px var(--line)}
+.tag .tt{font-weight:700;overflow-wrap:anywhere;padding-right:4px}
+.tag .who{color:var(--ink2);font-size:.88rem}
+.late-stamp{display:inline-block;margin-top:8px;border:2px solid var(--red);color:var(--red);font-weight:850;font-stretch:75%;font-size:.95rem;padding:0 8px;border-radius:3px;transform:rotate(-2deg)}
+.allclear{display:flex;gap:12px;align-items:center;padding:14px;border-radius:4px;background:color-mix(in srgb,var(--green) 12%,transparent);color:var(--green);font-weight:600;margin:0}
+.allclear svg{width:22px;height:22px;flex:none;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* priority */
+.prio{display:grid;gap:14px}
+.prow{display:grid;grid-template-columns:84px 1fr auto;gap:12px;align-items:center}
+.prow .pl{font-weight:700;display:flex;align-items:center;gap:8px}
+.prow .pl i{width:10px;height:10px;border-radius:50%;flex:none}
+.pbar{height:10px;background:var(--open);border-radius:3px;overflow:hidden}
+.pbar i{display:block;height:100%}
+.prow .pv{font-size:.9rem;color:var(--ink2);white-space:nowrap}
+.prow .pv b{color:var(--ink)}
+
+/* lists */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0;padding-top:0}
+.list .tx{min-width:0;overflow-wrap:anywhere;font-weight:600}
+.list .tx small{display:block;font-weight:400;color:var(--ink2);font-size:.86rem}
+.pbtn{flex:none;background:var(--yellow);color:#1b2340;border:0;border-radius:4px;padding:7px 11px;font-weight:700;font-size:.85rem;display:inline-flex;gap:6px;align-items:center}
+.pbtn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.pbtn:hover{filter:brightness(1.05)}
+.cmt li{display:block}
+.cmt q{display:block;quotes:none;border-left:3px solid var(--yellow);padding:2px 0 2px 12px;margin-bottom:6px;font-weight:500;overflow-wrap:anywhere}
+.cmt small{color:var(--ink2);font-size:.86rem}
+.cmt small b{color:var(--ink)}
+.empty{color:var(--ink2);margin:0}
+
+dialog{border:0;border-radius:8px;background:var(--card);color:var(--ink);padding:0;width:min(92vw,560px);overflow:hidden}
+dialog::backdrop{background:rgba(10,15,34,.65)}
+dialog .tape{height:10px}
+.dlg{padding:18px 20px 20px}
+.dlg h2{margin-bottom:12px}
+#vImg{display:block;width:100%;min-height:140px;border-radius:4px;background:var(--paper)}
 .acts{display:flex;justify-content:flex-end;margin-top:16px}
+.acts button{background:var(--ink);color:var(--card);border:0;border-radius:4px;padding:8px 18px;font-weight:700}
 [hidden]{display:none!important}
+
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+@media (max-width:640px){
+  .band-in{gap:10px;padding:10px 12px}.mark span,.stamp-time,.bbtn .lb{display:none}
+  .nav a{padding:6px 10px}
+  .figs{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:20px}
+  .stack{height:44px}
+  .crew li{grid-template-columns:1fr auto;gap:8px 12px}.crew .cbar{grid-column:1/-1;grid-row:2}
+  .panel{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-  <h1>Task <span>dashboard</span></h1>
-  <p class="sub" id="sub">Loading...</p>
-  <div class="top">
+<header class="band">
+  <div class="band-in">
+    <div class="mark"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>Task list</span></div>
     <nav class="nav" aria-label="Pages"><a href="/dashboard" aria-current="page">Dashboard</a><a href="/tasks">Task</a></nav>
-    <div class="actions"><button class="mini" id="refresh">Refresh</button><button class="mini" id="logout">Sign out</button></div>
+    <div class="tools">
+      <span class="stamp-time" id="sub">Loading...</span>
+      <button class="bbtn" id="refresh" title="Refresh now"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span class="lb">Refresh</span></button>
+      <button class="bbtn" id="logout" title="Sign out"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h12"/></svg><span class="lb">Sign out</span></button>
+    </div>
   </div>
+  <div class="tape hazard" aria-hidden="true"></div>
+</header>
+
+<main>
   <p class="err" id="err" role="alert"></p>
 
-  <div id="board" hidden>
-    <div class="kpis" id="kpis"></div>
+  <section class="hero" id="kpis" aria-live="polite">
+    <h1 class="headline">Task dashboard</h1>
+    <p class="lede">Loading today's jobs...</p>
+  </section>
 
-    <section class="card" aria-labelledby="hDaily">
-      <h2 id="hDaily">Tasks completed, last 14 days</h2>
-      <div id="chart"></div>
-    </section>
-
-    <section class="card" aria-labelledby="hPeople">
-      <h2 id="hPeople">By person</h2>
-      <div class="scroll"><table>
-        <thead><tr><th>Name</th><th class="n">Assigned</th><th class="n">Done</th><th class="n">Open</th><th class="n">Overdue</th><th>Progress</th></tr></thead>
-        <tbody id="people"></tbody>
-      </table></div>
-    </section>
-
-    <div class="grid">
-      <section class="card" aria-labelledby="hPrio"><h2 id="hPrio">By priority</h2><div class="rows" id="prio"></div></section>
-      <section class="card" aria-labelledby="hOver"><h2 id="hOver">Overdue tasks</h2><ul id="overdue"></ul></section>
+  <div class="layout" id="board" hidden>
+    <div class="col">
+      <section class="panel" aria-labelledby="hDaily">
+        <div class="ph"><h2 id="hDaily">Jobs closed, last 14 days</h2><p class="note" id="chartNote"></p></div>
+        <div id="chart"></div>
+      </section>
+      <section class="panel" aria-labelledby="hPeople">
+        <div class="ph"><h2 id="hPeople">Crew</h2><p class="note">Green is done, stripes are overdue</p></div>
+        <ul class="crew" id="people"></ul>
+      </section>
     </div>
-
-    <section class="card" aria-labelledby="hRecent"><h2 id="hRecent">Recently completed</h2><ul id="recent"></ul></section>
-    <section class="card" aria-labelledby="hComm"><h2 id="hComm">Latest comments</h2><ul id="comments"></ul></section>
+    <aside class="col">
+      <section class="panel" aria-labelledby="hOver">
+        <div class="ph"><h2 id="hOver">Overdue</h2></div>
+        <ul class="tags" id="overdue"></ul>
+      </section>
+      <section class="panel" aria-labelledby="hPrio">
+        <div class="ph"><h2 id="hPrio">By priority</h2></div>
+        <div class="prio" id="prio"></div>
+      </section>
+      <section class="panel" aria-labelledby="hRecent">
+        <div class="ph"><h2 id="hRecent">Just finished</h2></div>
+        <ul class="list" id="recent"></ul>
+      </section>
+      <section class="panel" aria-labelledby="hComm">
+        <div class="ph"><h2 id="hComm">Latest comments</h2></div>
+        <ul class="list cmt" id="comments"></ul>
+      </section>
+    </aside>
   </div>
 </main>
 
 <dialog id="viewDlg">
-  <h2 id="vTitle">Photo evidence</h2>
-  <img id="vImg" alt="Photo evidence for this task" style="width:100%;margin-top:8px;border-radius:10px">
-  <div class="acts"><button type="button" class="ghost" id="vClose">Close</button></div>
+  <div class="tape hazard" aria-hidden="true"></div>
+  <div class="dlg">
+    <h2 id="vTitle">Photo evidence</h2>
+    <img id="vImg" alt="Photo evidence for this task">
+    <div class="acts"><button type="button" id="vClose">Close</button></div>
+  </div>
 </dialog>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const el = (tag, props, ...kids) => { const n = Object.assign(document.createElement(tag), props); kids.forEach((k) => n.append(k)); return n; };
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
-const PRIO = { high: ['High', 'var(--hi)'], med: ['Medium', 'var(--md)'], low: ['Low', 'var(--lo)'] };
+const PRIO = { high: ['High', 'var(--red)'], med: ['Medium', 'var(--yellow)'], low: ['Low', 'var(--green)'] };
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+let firstRender = true, lastDaily = null, narrow = innerWidth < 640;
 
 async function api(path, method = 'GET') {
   const r = await fetch(path, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: method === 'GET' ? undefined : '{}' });
@@ -112,66 +231,116 @@ async function api(path, method = 'GET') {
   if (!r.ok) { const e = new Error(d.error || 'Something went wrong.'); e.status = r.status; throw e; }
   return d;
 }
-const fmtDay = (s) => { const p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); };
+const parseDay = (s) => { const p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
+const fmtDay = (s) => parseDay(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 const fmtTime = (iso) => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const meter = (p) => { const m = el('div', { className: 'meter' }); m.setAttribute('role', 'img'); m.setAttribute('aria-label', p + '% done'); m.append(el('i')); m.firstChild.style.width = p + '%'; return m; };
+const daysLate = (s) => { const t = new Date(); t.setHours(0, 0, 0, 0); return Math.max(1, Math.round((t - parseDay(s)) / 864e5)); };
+const grow = (node, w) => { if (firstRender) requestAnimationFrame(() => requestAnimationFrame(() => { node.style.width = w; })); else node.style.width = w; };
 
-function kpi(label, value, bad) { return el('div', { className: 'kpi' + (bad ? ' bad' : '') }, el('b', { textContent: value }), el('span', { textContent: label })); }
+function hero(t) {
+  const p = pct(t.done, t.total);
+  const h = el('h1', { className: 'headline', textContent: t.total ? `${t.done} of ${plural(t.total, 'job', 'jobs')} done` : 'No jobs yet' });
+  const lede = el('p', { className: 'lede' },
+    el('b', { textContent: t.started }), ' in progress, ', el('b', { textContent: t.open }), ' open. ',
+    t.overdue ? el('b', { className: 'late', textContent: plural(t.overdue, 'job is', 'jobs are') + ' overdue.' }) : 'Nothing is overdue.');
+
+  const seg = (cls, v) => { const s = el('div', { className: 'seg ' + cls }); grow(s, (t.total ? (v / t.total) * 100 : 0) + '%'); return s; };
+  const over = seg('over hazard', t.overdue);
+  const stack = el('div', { className: 'stack' }, seg('done', t.done), seg('started', t.started), seg('open', t.open), over);
+  stack.setAttribute('role', 'img');
+  stack.setAttribute('aria-label', `${t.done} done, ${t.started} in progress, ${t.open} open, ${t.overdue} overdue`);
+  const mark = el('div', { className: 'pctmark' + (p < 12 ? ' flip' : ''), textContent: p + '% done' });
+  mark.style.left = p + '%';
+
+  const fig = (v, label, swatch, late) => { const i = el('i'); if (swatch.startsWith('.')) i.className = swatch.slice(1); else i.style.background = swatch; return el('div', { className: 'fig' + (late ? ' late' : '') }, el('b', { textContent: v }), el('span', {}, i, label)); };
+  $('kpis').replaceChildren(h, lede, el('div', { className: 'stackwrap' }, mark, stack),
+    el('div', { className: 'figs' }, fig(t.done, 'Done', 'var(--green)'), fig(t.started, 'In progress', 'var(--blue)'), fig(t.open, 'Open', 'var(--open)'), fig(t.overdue, 'Overdue', '.hazard', t.overdue > 0)));
+}
 
 function drawChart(daily) {
-  const W = 560, H = 150, base = 120, max = Math.max(1, ...daily.map((d) => d.n)), slot = W / daily.length, bw = slot * 0.62;
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tasks completed per day over the last 14 days">`;
-  s += `<line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="var(--line)"/>`;
+  lastDaily = daily;
+  const W = narrow ? 360 : 680, H = 200, top = 22, base = 168, n = daily.length || 1;
+  const max = Math.max(1, ...daily.map((d) => d.n)), slot = W / n, bw = Math.min(30, slot * 0.62);
+  const unit = (base - top) / max, blocks = unit >= 7;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jobs closed per day over the last 14 days">`;
+  s += `<line x1="0" y1="${base + 1}" x2="${W}" y2="${base + 1}" stroke="var(--line)" stroke-width="2"/>`;
   daily.forEach((d, i) => {
-    const h = Math.round((d.n / max) * (base - 22)), x = i * slot + (slot - bw) / 2;
-    if (d.n) s += `<rect x="${x}" y="${base - h}" width="${bw}" height="${h}" rx="3" fill="var(--accent)"><title>${fmtDay(d.day)}: ${d.n}</title></rect><text x="${x + bw / 2}" y="${base - h - 5}" text-anchor="middle">${d.n}</text>`;
-    if (i % 2 === 0 || i === daily.length - 1) s += `<text x="${x + bw / 2}" y="${base + 16}" text-anchor="middle">${d.day.slice(8)}</text>`;
+    const today = i === daily.length - 1, x = slot * i + (slot - bw) / 2;
+    const fill = today ? 'var(--yellow)' : 'var(--ink)', stroke = today ? ' stroke="var(--ink)" stroke-width="1.5"' : '';
+    const tip = `<title>${fmtDay(d.day)}: ${plural(d.n, 'job', 'jobs')} closed</title>`;
+    if (!d.n) s += `<rect x="${x}" y="${base - 2}" width="${bw}" height="2" fill="var(--line)">${tip}</rect>`;
+    else if (blocks) {
+      s += `<g>${tip}`;
+      for (let k = 0; k < d.n; k++) s += `<rect x="${x}" y="${base - (k + 1) * unit + 1}" width="${bw}" height="${unit - 3}" rx="1.5" fill="${fill}"${stroke}/>`;
+      s += '</g>';
+    } else s += `<rect x="${x}" y="${base - d.n * unit}" width="${bw}" height="${d.n * unit}" rx="2" fill="${fill}"${stroke}>${tip}</rect>`;
+    if (d.n) s += `<text class="cnt" x="${x + bw / 2}" y="${base - d.n * unit - 7}" text-anchor="middle">${d.n}</text>`;
+    const showLabel = today || (i % (narrow ? 3 : 2) === 0 && i < daily.length - 2);
+    if (showLabel) s += `<text class="${today ? 'today' : ''}" x="${x + bw / 2}" y="${base + 22}" text-anchor="middle">${today ? 'Today' : +d.day.slice(8)}</text>`;
   });
   $('chart').innerHTML = s + '</svg>';
+  const sum = daily.reduce((a, d) => a + d.n, 0), best = daily.reduce((a, d) => (d.n > a.n ? d : a), { n: 0 });
+  $('chartNote').textContent = sum ? `${sum} closed, best day ${fmtDay(best.day)} with ${best.n}` : 'Nothing closed yet';
 }
+addEventListener('resize', () => { const nw = innerWidth < 640; if (nw !== narrow) { narrow = nw; if (lastDaily) drawChart(lastDaily); } });
 
 function render(d) {
   const t = d.totals;
-  $('kpis').replaceChildren(kpi('Total tasks', t.total), kpi('Done', t.done), kpi('In progress', t.started), kpi('Open', t.open), kpi('Overdue', t.overdue, t.overdue > 0), kpi('Completion', pct(t.done, t.total) + '%'));
+  hero(t);
   drawChart(d.daily);
 
   $('people').replaceChildren(...(d.people.length ? d.people.map((p) => {
-    const open = p.assigned - p.done;
-    return el('tr', {}, el('td', { textContent: p.name }), el('td', { className: 'n', textContent: p.assigned }), el('td', { className: 'n', textContent: p.done }),
-      el('td', { className: 'n', textContent: open }), el('td', { className: 'n' + (p.overdue ? ' late' : ''), textContent: p.overdue }), el('td', {}, meter(pct(p.done, p.assigned))));
-  }) : [el('tr', {}, el('td', { colSpan: 6, className: 'empty', textContent: 'No people yet.' }))]));
+    const late = Math.min(p.overdue, p.assigned - p.done), w = (v) => (p.assigned ? (v / p.assigned) * 100 : 0) + '%';
+    const done = el('i'); done.style.background = 'var(--green)';
+    const over = el('i', { className: 'hazard' });
+    const bar = el('div', { className: 'cbar' }, done, over); bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', `${p.done} of ${p.assigned} done, ${p.overdue} overdue`);
+    grow(done, w(p.done)); grow(over, w(late));
+    const sub = el('small', {}, `${p.done} of ${p.assigned} done`);
+    if (p.overdue) sub.append(', ', el('em', { textContent: p.overdue + ' overdue' }));
+    return el('li', {}, el('div', { className: 'nm' }, p.name, sub), bar, el('div', { className: 'pc', textContent: pct(p.done, p.assigned) + '%' }));
+  }) : [el('li', {}, el('p', { className: 'empty', textContent: 'No one has been assigned a task yet.' }))]));
 
-  const order = ['high', 'med', 'low'];
-  $('prio').replaceChildren(...order.map((k) => {
+  $('overdue').replaceChildren(...(d.overdue.length ? d.overdue.map((o) => { const dl = daysLate(o.due); return el('li', { className: 'tag' },
+    el('div', { className: 'tt', textContent: o.text }),
+    el('div', { className: 'who', textContent: (o.assignee_name || 'Unassigned') + ', was due ' + fmtDay(o.due) }),
+    el('span', { className: 'late-stamp', textContent: plural(dl, 'day', 'days') + ' late' })); })
+    : [el('li', {}, el('p', { className: 'allclear', innerHTML: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>' }, 'Nothing overdue. Every job is on schedule.'))]));
+
+  $('prio').replaceChildren(...['high', 'med', 'low'].map((k) => {
     const r = d.priorities.find((x) => x.priority === k) || { total: 0, done: 0 };
-    const dot = el('span', { className: 'dot' }); dot.style.background = PRIO[k][1];
-    return el('div', { className: 'row' }, el('span', {}, dot, PRIO[k][0]), meter(pct(r.done, r.total)), el('span', { className: 'n', textContent: r.done + '/' + r.total }));
+    const dot = el('i'); dot.style.background = PRIO[k][1];
+    const fill = el('i'); fill.style.background = PRIO[k][1]; grow(fill, pct(r.done, r.total) + '%');
+    const bar = el('div', { className: 'pbar' }, fill); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', pct(r.done, r.total) + '% done');
+    return el('div', { className: 'prow' }, el('span', { className: 'pl' }, dot, PRIO[k][0]), bar, el('span', { className: 'pv' }, el('b', { textContent: r.done }), ' of ' + r.total));
   }));
 
-  $('overdue').replaceChildren(...(d.overdue.length ? d.overdue.map((o) => el('li', { className: 'item' },
-    el('div', { className: 't' }, o.text, el('small', { textContent: (o.assignee_name || 'Unassigned') + ' - was due ' + fmtDay(o.due) }))))
-    : [el('p', { className: 'empty', textContent: 'Nothing is overdue.' })]));
+  $('recent').replaceChildren(...(d.recent.length ? d.recent.map((r) => el('li', {},
+    el('div', { className: 'tx' }, r.text, el('small', { textContent: (r.assignee_name || 'Unassigned') + ', ' + fmtTime(r.done_at) })),
+    el('button', { className: 'pbtn', title: 'View photo evidence', innerHTML: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Photo',
+      onclick: () => { $('vTitle').textContent = r.text; $('vImg').src = '/api/evidence?id=' + r.id + '&t=' + Date.now(); $('viewDlg').showModal(); } })))
+    : [el('li', {}, el('p', { className: 'empty', textContent: 'Finished jobs will show up here with their photos.' }))]));
 
-  $('recent').replaceChildren(...(d.recent.length ? d.recent.map((r) => el('li', { className: 'item' },
-    el('div', { className: 't' }, r.text, el('small', { textContent: (r.assignee_name || 'Unassigned') + ' - ' + fmtTime(r.done_at) })),
-    el('button', { className: 'mini', textContent: 'View photo', onclick: () => { $('vTitle').textContent = r.text; $('vImg').src = '/api/evidence?id=' + r.id + '&t=' + Date.now(); $('viewDlg').showModal(); } })))
-    : [el('p', { className: 'empty', textContent: 'No completed tasks yet.' })]));
+  $('comments').replaceChildren(...(d.comments.length ? d.comments.map((c) => el('li', {},
+    el('q', { textContent: c.body }),
+    el('small', {}, el('b', { textContent: c.author_name || 'Someone' }), ' on ' + c.task_text + ', ' + fmtTime(c.created_at))))
+    : [el('li', {}, el('p', { className: 'empty', textContent: 'No comments yet.' }))]));
 
-  $('comments').replaceChildren(...(d.comments.length ? d.comments.map((c) => el('li', { className: 'item' },
-    el('div', { className: 't' }, c.body, el('small', { textContent: (c.author_name || 'Someone') + ' on "' + c.task_text + '" - ' + fmtTime(c.created_at) }))))
-    : [el('p', { className: 'empty', textContent: 'No comments yet.' })]));
-
-  $('sub').textContent = 'Updated ' + new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + '. Refreshes every minute.';
+  $('sub').textContent = 'Updated ' + new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   $('board').hidden = false;
+  firstRender = false;
 }
 
 async function refresh() {
   $('err').textContent = '';
+  $('refresh').classList.add('busy');
   try { render(await api('/api/stats')); }
-  catch (e) { if (e.status === 401 || e.status === 403) location.href = '/'; else $('err').textContent = e.message; }
+  catch (e) { if (e.status === 401 || e.status === 403) location.href = '/'; else $('err').textContent = "Couldn't load the dashboard: " + e.message + ' Try Refresh.'; }
+  finally { $('refresh').classList.remove('busy'); }
 }
 $('refresh').onclick = refresh;
 $('vClose').onclick = () => $('viewDlg').close();
+$('viewDlg').addEventListener('click', (e) => { if (e.target === $('viewDlg')) $('viewDlg').close(); });
 $('logout').onclick = async () => { try { await api('/api/auth?action=logout', 'POST'); } catch (e) {} location.href = '/'; };
 
 (async () => {
