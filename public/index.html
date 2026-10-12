@@ -4,84 +4,209 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Task list</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
 <style>
-:root{--bg:#eef2f6;--panel:#fff;--ink:#14213d;--muted:#6b7890;--line:#d9e0ea;--accent:#2f5bea;--on:#fff;--mark:#ffe14d;--hi:#e5484d;--md:#f0a020;--lo:#3aa675}
-@media (prefers-color-scheme:dark){:root{--bg:#10151f;--panel:#182030;--ink:#e8edf6;--muted:#8d9ab0;--line:#2a3548;--accent:#6f93ff;--on:#10151f;--mark:#8a7a1c}}
+:root{
+  color-scheme:light;
+  --wall:#d8dbd4;--plate:#f1f2ee;--ink:#1f232b;--ink2:#5a6170;--rule:#c4c8bf;--seg-off:#c9cdc4;--frame:#3a3f4a;
+  --board:#1b1e25;--row:#20242c;--flap-a:#30353f;--flap-b:#272b34;--split:#0c0e12;--flap-ink:#f4efdf;--dim:#8d93a1;--off:#2b3039;
+  --amber:#ffb21e;--green:#45d483;--red:#ff5252;--blue:#5aa9ff;--red-ink:#c62828;--green-ink:#1d7a45;
+  --field:#ffffff;--field-ink:var(--ink);--field-line:var(--rule);
+  --cond:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  color-scheme:dark;
+  --wall:#111317;--plate:#1a1d23;--ink:#eceae2;--ink2:#9aa0ad;--rule:#2b2f37;--seg-off:#2b3039;--frame:#2e333d;
+  --board:#16191f;--row:#1b1f26;--red-ink:#ff6b6b;--green-ink:#45d483;
+  --field:#14171c;
+}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:640px;margin:0 auto;padding:40px 16px 64px}
-h1{font-size:2.4rem;line-height:1.1;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
-h1 span{background:linear-gradient(transparent 62%,var(--mark) 62%)}
-.sub{color:var(--muted);margin:0 0 20px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--wall);color:var(--ink);font:400 16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+main{max-width:780px;margin:0 auto;padding:18px 16px 80px}
 input,select,button,textarea{font:inherit;color:inherit}
-input,select{background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
-input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.btn{background:var(--accent);color:var(--on);border:0;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer}
-.ghost,.mini{background:none;border:1.5px solid var(--line);border-radius:10px;padding:10px 18px;cursor:pointer}
-.mini{padding:3px 10px;font-size:.82rem;border-radius:8px}
-.card{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
-.card label,dialog label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
-.card input,dialog input{width:100%}
-.err{color:var(--hi);min-height:1.3em;margin:8px 0 0;font-size:.9rem}
-.nav{display:flex;gap:4px;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:3px;width:max-content;margin-bottom:12px}
-.nav a{border-radius:7px;padding:5px 14px;color:var(--muted);font-weight:600;text-decoration:none}
-.nav a[aria-current=page]{background:var(--accent);color:var(--on)}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
-details{background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
-summary{cursor:pointer;font-weight:600}
-.reg{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
-.reg .due{overflow-wrap:anywhere}
-form.add{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* fields adapt to whatever surface they sit on */
+input[type=text],input[type=email],input[type=password],input[type=tel],input[type=date],input[type=file],select,textarea{
+  background:var(--field);color:var(--field-ink);border:1.5px solid var(--field-line);border-radius:6px;padding:10px 12px;min-width:0}
+textarea{width:100%;resize:vertical;min-height:72px}
+input[type=checkbox]{accent-color:var(--amber)}
+.board,dialog{--field:#101318;--field-ink:var(--flap-ink);--field-line:#3a404c}
+
+/* buttons */
+.btn{background:var(--amber);color:#1b1e25;border:0;border-radius:6px;padding:10px 18px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn:hover{filter:brightness(1.06)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.ghost{background:none;border:1.5px solid var(--field-line);color:inherit;border-radius:6px;padding:10px 18px;font-weight:600;cursor:pointer}
+.mini{background:var(--plate);border:1px solid var(--rule);border-radius:6px;padding:5px 11px;font-size:.86rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.mini:hover{border-color:var(--ink2)}
+.mini:disabled{opacity:.55}
+
+/* station header */
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.sign{display:flex;align-items:center;gap:12px;background:var(--board);color:var(--flap-ink);border:4px solid var(--frame);border-radius:8px;padding:6px 16px 6px 8px;margin:0}
+.sign i{width:30px;height:30px;border-radius:50%;background:var(--amber);display:grid;place-items:center;flex:none}
+.sign svg{width:16px;height:16px;stroke:#1b1e25;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sign h1{font:700 1.45rem/1 var(--cond);letter-spacing:.01em;margin:0}
+.nav{display:flex;gap:2px}
+.nav a{font:600 1.05rem var(--cond);color:var(--ink2);text-decoration:none;padding:6px 12px;border-bottom:3px solid transparent}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current=page]{color:var(--ink);border-bottom-color:var(--amber)}
+.who-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 14px}
+.sub{color:var(--ink2);margin:0}
+.err{color:var(--red-ink);margin:8px 0 0;font-size:.92rem;font-weight:500}
+.err:empty{display:none}
+#note:not(:empty){background:var(--plate);border-left:5px solid var(--amber);color:var(--ink);padding:10px 14px;border-radius:4px;margin:0 0 14px}
+
+/* boards */
+.board{background:var(--board);color:var(--flap-ink);border:6px solid var(--frame);border-radius:10px;padding:18px 20px 20px;position:relative;min-width:0;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 10px 24px -14px rgba(0,0,0,.55);margin-bottom:16px}
+.board::before,.board::after{content:"";position:absolute;top:7px;width:6px;height:6px;border-radius:50%;background:#4a505c;box-shadow:0 0 0 1px #111}
+.board::before{left:7px}.board::after{right:7px}
+.board h2{font:700 1.35rem/1.1 var(--cond);margin:0 0 4px}
+.board .hint{color:var(--dim);margin:0 0 14px;font-size:.94rem}
+
+/* split-flap */
+.flap{display:inline-flex;gap:3px;perspective:400px}
+.ft{position:relative;display:inline-grid;place-items:center;width:.66em;height:1.08em;border-radius:.07em;
+  background:linear-gradient(var(--flap-a) 0 50%,var(--flap-b) 50% 100%);color:var(--flap-ink);
+  font:700 1em/1 var(--cond);box-shadow:0 .04em 0 #07080a,inset 0 1px 0 rgba(255,255,255,.06)}
+.ft::after{content:"";position:absolute;left:0;right:0;top:calc(50% - 1px);height:2px;background:var(--split)}
+.ft.flip{animation:flip .22s ease-in-out}
+@keyframes flip{50%{transform:rotateX(88deg)}}
+
+/* sign-in */
+.gate{max-width:440px;margin:6vh auto 0}
+.gate label{display:block;font-weight:600;font-size:.92rem;margin:14px 0 6px;color:var(--flap-ink)}
+.gate input{width:100%}
+.gate .btn{width:100%;margin-top:18px;padding:12px}
+
+/* summary board */
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px 20px 18px}
+.sum .flap{font-size:clamp(2.1rem,7vw,3rem)}
+.sum .lbl{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--dim);font-weight:500}
+.lamp{width:10px;height:10px;border-radius:50%;flex:none;background:var(--c);box-shadow:0 0 8px var(--c)}
+.sum.late .ft{color:var(--red)}
+
+/* team plate */
+details.team{background:var(--plate);border:1px solid var(--rule);border-radius:8px;padding:0;margin-bottom:16px}
+details.team>summary{list-style:none;cursor:pointer;padding:14px 18px;font:700 1.2rem/1.1 var(--cond);display:flex;justify-content:space-between;align-items:center}
+details.team>summary::-webkit-details-marker{display:none}
+details.team>summary::after{content:"Show";font:600 .88rem var(--body);color:var(--ink2)}
+details.team[open]>summary::after{content:"Hide"}
+.team-in{padding:0 18px 18px}
+.reg{display:flex;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--rule);flex-wrap:wrap}
+.reg strong{margin-right:8px}
+.reg .badge{font-size:.78rem;font-weight:700;padding:1px 8px;border-radius:99px}
+.badge.inv{background:color-mix(in srgb,var(--amber) 25%,transparent);color:var(--ink)}
+.badge.act{background:color-mix(in srgb,var(--green) 22%,transparent);color:var(--ink)}
+.reg .info{flex:1;min-width:180px}
+.reg .info div{color:var(--ink2);font-size:.88rem;overflow-wrap:anywhere}
+
+/* new task board */
+form.add{display:grid;grid-template-columns:1fr auto;gap:10px}
+form.add #text{font-size:1.05rem;padding:12px 14px}
 form.add .opts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:20px 0 10px}
-.tabs{display:flex;gap:4px;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:3px}
-.tabs button{background:none;border:0;border-radius:7px;padding:5px 12px;cursor:pointer;color:var(--muted);font-weight:600}
-.tabs button[aria-pressed=true]{background:var(--accent);color:var(--on)}
-.count{color:var(--muted);font-size:.9rem}
-ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-li{display:flex;align-items:center;gap:12px;background:var(--panel);border:1.5px solid var(--line);border-left:6px solid var(--md);border-radius:10px;padding:10px 12px}
-li[data-p=high]{border-left-color:var(--hi)}li[data-p=low]{border-left-color:var(--lo)}
-li input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none;cursor:pointer}
-.body{flex:1;min-width:0}.title{display:block;overflow-wrap:anywhere}
-li.done .title{text-decoration:line-through;color:var(--muted)}
-.due{font-size:.82rem;color:var(--muted)}.due.late{color:var(--hi);font-weight:600}
-li select{max-width:130px;padding:4px 8px;font-size:.85rem}
-.x{background:none;border:0;color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;padding:6px}
-.x:hover{color:var(--hi)}
-.empty{text-align:center;color:var(--muted);padding:32px 0;display:block;border:0;background:none}
-dialog{border:1.5px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:20px;width:min(92vw,400px)}
-dialog::backdrop{background:rgba(10,15,30,.5)}
-dialog h2{margin:0 0 4px;font-size:1.3rem}
-.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-li{flex-wrap:wrap}
-.prog{flex-basis:100%;display:grid;gap:8px;margin-top:2px}
-.meter{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
-.meter i{display:block;height:100%;background:var(--lo);transition:width .2s}
-.steps{display:flex;gap:6px}
-.steps button{flex:1;min-width:0;background:none;border:1.5px solid var(--line);border-radius:10px;padding:9px 4px;font-weight:600;cursor:pointer}
-.steps button[aria-pressed=true]{background:var(--accent);color:var(--on);border-color:var(--accent)}
-.steps button:disabled{opacity:.55;cursor:not-allowed}
-.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
-.pill{display:inline-flex;gap:6px;align-items:center;border:1.5px solid var(--line);border-radius:99px;padding:2px 10px;font-size:.82rem;cursor:pointer}
-.pill input{width:16px;height:16px;padding:0;margin:0;accent-color:var(--accent)}
-textarea{width:100%;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;min-height:70px}
-textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.cm{background:var(--bg);border-radius:10px;padding:8px 10px;margin-bottom:6px}
-.cm small{color:var(--muted)}.cm p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
-.lab{font-weight:600;font-size:.88rem}
-.clist{max-height:220px;overflow-y:auto}
-.cform{display:grid;gap:6px}
+form.add .opts select,form.add .opts input[type=date]{flex:1 1 150px}
+.pill{display:inline-flex;gap:8px;align-items:center;border:1.5px solid var(--field-line);border-radius:6px;padding:8px 12px;font-size:.92rem;font-weight:600;cursor:pointer}
+.pill input{width:18px;height:18px;margin:0}
+
+/* filter bar */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0 12px}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--rule)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:6px 14px;cursor:pointer;color:var(--ink2);font:700 1.1rem var(--cond)}
+.tabs button[aria-pressed=true]{color:var(--ink);border-bottom-color:var(--amber)}
+.bar-r{display:flex;align-items:center;gap:10px}
+.count{color:var(--ink2);font-size:.92rem}
+
+/* task tickets */
+#list{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.task{border-radius:10px;overflow:hidden;border:1px solid var(--rule);background:var(--plate);box-shadow:0 6px 16px -12px rgba(0,0,0,.4)}
+.strip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--board);color:var(--flap-ink);padding:9px 14px;border-bottom:4px solid var(--frame)}
+.strip .pri{display:flex;align-items:center;gap:8px;font:700 1.05rem var(--cond)}
+.strip .when{font:700 1.05rem var(--cond);color:var(--amber);margin-left:auto}
+.strip .when.late{color:var(--red)}
+.strip .when.fin{color:var(--green)}
+.donebox{display:inline-flex;align-items:center;gap:7px;font:700 1rem var(--cond);cursor:pointer;background:var(--flap-a);border-radius:5px;padding:4px 10px}
+.donebox input{width:18px;height:18px;margin:0;cursor:pointer}
+.tbody{padding:14px 16px 16px}
+.titlerow{display:flex;align-items:flex-start;gap:10px}
+.title{flex:1;min-width:0;display:block;font-weight:700;font-size:1.15rem;line-height:1.3;overflow-wrap:anywhere}
+.task.done .title{text-decoration:line-through;text-decoration-thickness:2px;color:var(--ink2)}
+.admin-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.admin-row select{padding:6px 10px;font-size:.92rem;max-width:200px}
+.admin-row .pill{padding:5px 10px;font-size:.86rem;border-color:var(--rule)}
+.x{margin-left:auto;background:none;border:1px solid transparent;border-radius:6px;color:var(--ink2);font-size:.86rem;font-weight:600;padding:5px 10px;cursor:pointer}
+.x:hover{color:var(--red-ink);border-color:var(--red-ink)}
+
+.prog{display:grid;gap:10px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule)}
+.lab{font-weight:700;font-size:.95rem;display:flex;justify-content:space-between;align-items:baseline}
+.lab .pc{font:800 1.5rem/1 var(--cond)}
+.leds{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;height:14px}
+.leds i{border-radius:2px;background:var(--seg-off)}
+.leds i.on{background:var(--green)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.steps button{background:var(--board);color:var(--flap-ink);border:0;border-radius:6px;padding:10px 4px;font:700 1.15rem var(--cond);cursor:pointer;box-shadow:0 3px 0 #07080a}
+.steps button:active{transform:translateY(2px);box-shadow:0 1px 0 #07080a}
+.steps button[aria-pressed=true]{background:var(--amber);color:#1b1e25}
+.steps button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.9rem;color:var(--ink2)}
+.meta.need{color:var(--ink);flex-wrap:nowrap;align-items:flex-start}
+.meta.need::before{content:"";width:16px;height:16px;flex:none;background:var(--amber);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>') center/contain no-repeat}
+
+details.cmts{border-top:1px dashed var(--rule);padding-top:10px}
+details.cmts>summary{cursor:pointer;font-weight:700;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:8px}
+details.cmts>summary::-webkit-details-marker{display:none}
+details.cmts>summary::before{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+details.cmts[open]>summary::before{transform:rotate(45deg)}
+details.cmts .n{background:var(--board);color:var(--flap-ink);font:700 .85rem var(--cond);border-radius:4px;padding:0 7px}
+.clist{max-height:240px;overflow-y:auto;margin:10px 0}
+.cm{border-left:3px solid var(--amber);padding:2px 0 2px 12px;margin-bottom:10px}
+.cm small{color:var(--ink2);font-size:.84rem}
+.cm small b{color:var(--ink)}
+.cm p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.cform{display:grid;gap:8px}
 .cform .btn{justify-self:end}
+.due{font-size:.88rem;color:var(--ink2);margin:0}
+.empty{list-style:none;text-align:center;color:var(--ink2);padding:36px 16px;border:2px dashed var(--rule);border-radius:10px;font-weight:500}
+
+/* dialogs */
+dialog{border:6px solid var(--frame);border-radius:10px;background:var(--board);color:var(--flap-ink);padding:18px 20px 20px;width:min(92vw,440px)}
+dialog::backdrop{background:rgba(8,9,12,.7)}
+dialog h2{font:700 1.35rem/1.15 var(--cond);margin:0 0 6px}
+dialog label{display:block;font-weight:600;font-size:.92rem;margin:14px 0 6px}
+dialog input{width:100%}
+dialog .sub,dialog .due{color:var(--dim)}
+dialog .err{color:var(--red)}
+dialog .ghost{border-color:#3a404c}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+#pPrev,#vImg{width:100%;margin-top:12px;border-radius:6px;background:var(--row)}
 [hidden]{display:none!important}
+
+@media (max-width:560px){
+  .sign h1{font-size:1.2rem}
+  .board{padding:16px 14px}
+  form.add{grid-template-columns:1fr}form.add .btn{width:100%}
+  .summary{gap:10px;padding:14px}
+  .tbody{padding:12px 14px 14px}
+  .bar{margin-top:18px}.bar-r{width:100%;justify-content:space-between}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <main>
-  <h1>My <span>tasks</span></h1>
+  <header class="head">
+    <div class="sign"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><h1>My tasks</h1></div>
+    <nav class="nav" id="nav" aria-label="Pages" hidden><a href="/dashboard">Dashboard</a><a href="/tasks" aria-current="page">Task</a></nav>
+  </header>
 
-  <section id="login" class="card" hidden>
-    <strong>Sign in</strong>
+  <section id="login" class="board gate" hidden>
+    <h2>Sign in</h2>
+    <p class="hint">Use the email and password from your invite.</p>
     <form id="loginForm">
       <label for="lEmail">Email</label><input id="lEmail" type="email" required autocomplete="username">
       <label for="lPass">Password</label><input id="lPass" type="password" required autocomplete="current-password">
@@ -90,9 +215,9 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
     </form>
   </section>
 
-  <section id="accept" class="card" hidden>
-    <strong id="aHello">Welcome</strong>
-    <p class="sub" style="margin:4px 0 0">Choose a password to finish setting up your account.</p>
+  <section id="accept" class="board gate" hidden>
+    <h2 id="aHello">Welcome</h2>
+    <p class="hint">Choose a password to finish setting up your account.</p>
     <form id="acceptForm">
       <label for="aPass">New password</label><input id="aPass" type="password" required minlength="8" autocomplete="new-password">
       <p class="err" id="aErr" role="alert"></p>
@@ -101,18 +226,25 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   </section>
 
   <section id="app" hidden>
-    <nav class="nav" id="nav" aria-label="Pages" hidden><a href="/dashboard">Dashboard</a><a href="/tasks" aria-current="page">Task</a></nav>
-    <div class="top"><p class="sub" id="sub" style="margin:0"></p><button class="mini" id="logout">Sign out</button></div>
+    <div class="who-bar"><p class="sub" id="sub"></p><button class="mini" id="logout">Sign out</button></div>
     <p class="err" id="note" role="status"></p>
 
-    <details id="team" hidden>
+    <section class="board summary" aria-label="Task summary">
+      <div class="sum"><span class="flap" id="sumTodo" role="img"></span><div class="lbl"><i class="lamp" style="--c:var(--amber)"></i>To do</div></div>
+      <div class="sum"><span class="flap" id="sumDone" role="img"></span><div class="lbl"><i class="lamp" style="--c:var(--green)"></i>Done</div></div>
+      <div class="sum late"><span class="flap" id="sumLate" role="img"></span><div class="lbl"><i class="lamp" style="--c:var(--red)"></i>Overdue</div></div>
+    </section>
+
+    <details id="team" class="team" hidden>
       <summary>Team members</summary>
-      <div id="members" style="margin:10px 0"></div>
-      <button type="button" class="btn" id="addPerson">Add person</button>
+      <div class="team-in">
+        <div id="members" style="margin:0 0 14px"></div>
+        <button type="button" class="btn" id="addPerson">Add person</button>
+      </div>
       <dialog id="reg" aria-labelledby="regTitle">
         <form id="regForm">
           <h2 id="regTitle">Register a person</h2>
-          <p class="sub" style="font-size:.9rem;margin:0">They'll receive an email with a link to set their password.</p>
+          <p class="sub" style="font-size:.92rem;margin:0">They'll get an email with a link to set their password.</p>
           <label for="rName">Name</label><input id="rName" type="text" required autocomplete="off">
           <label for="rEmail">Email</label><input id="rEmail" type="email" required autocomplete="off">
           <label for="rPhone">Mobile number</label><input id="rPhone" type="tel" required autocomplete="off" placeholder="+1 555 010 0199">
@@ -122,23 +254,29 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
       </dialog>
     </details>
 
-    <form class="add" id="taskForm" hidden>
-      <input type="text" id="text" placeholder="What needs doing?" aria-label="New task" autocomplete="off" required>
-      <button class="btn" type="submit">Add task</button>
-      <div class="opts">
-        <select id="who" aria-label="Assign to"></select>
-        <select id="prio" aria-label="Priority"><option value="high">High priority</option><option value="med" selected>Medium priority</option><option value="low">Low priority</option></select>
-        <input type="date" id="due" aria-label="Due date">
-        <label class="pill"><input type="checkbox" id="needPhoto" checked> Photo required</label>
-      </div>
-    </form>
+    <section class="board" id="taskBoard" hidden>
+      <h2>New task</h2>
+      <p class="hint">Write it, assign it, set when it's due.</p>
+      <form class="add" id="taskForm" hidden>
+        <input type="text" id="text" placeholder="What needs doing?" aria-label="New task" autocomplete="off" required>
+        <button class="btn" type="submit">Add task</button>
+        <div class="opts">
+          <select id="who" aria-label="Assign to"></select>
+          <select id="prio" aria-label="Priority"><option value="high">High priority</option><option value="med" selected>Medium priority</option><option value="low">Low priority</option></select>
+          <input type="date" id="due" aria-label="Due date">
+          <label class="pill"><input type="checkbox" id="needPhoto" checked> Photo required</label>
+        </div>
+      </form>
+    </section>
 
     <div class="bar">
       <div class="tabs" role="group" aria-label="Filter">
         <button data-f="active" aria-pressed="true">To do</button><button data-f="done" aria-pressed="false">Done</button><button data-f="all" aria-pressed="false">All</button>
       </div>
-      <select id="pf" aria-label="Show tasks for" hidden></select>
-      <span class="count" id="count"></span>
+      <div class="bar-r">
+        <select id="pf" aria-label="Show tasks for" hidden></select>
+        <span class="count" id="count"></span>
+      </div>
     </div>
     <ul id="list"></ul>
   </section>
@@ -148,13 +286,13 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   <p class="due" id="pTask"></p>
   <label for="pFile" id="pLab">Take or choose a photo</label>
   <input type="file" id="pFile" accept="image/*">
-  <img id="pPrev" alt="Preview of your photo" hidden style="width:100%;margin-top:12px;border-radius:10px">
+  <img id="pPrev" alt="Preview of your photo" hidden>
   <p class="err" id="pErr" role="alert"></p>
   <div class="acts"><button type="button" class="ghost" id="pCancel">Cancel</button><button type="button" class="btn" id="pSave" disabled>Mark done</button></div>
 </dialog>
 <dialog id="viewDlg">
   <h2 id="vTitle">Photo evidence</h2>
-  <img id="vImg" alt="Photo evidence for this task" style="width:100%;margin-top:8px;border-radius:10px">
+  <img id="vImg" alt="Photo evidence for this task">
   <div class="acts"><button type="button" class="ghost" id="vClose">Close</button></div>
 </dialog>
 <script>
@@ -171,6 +309,30 @@ const note = (t) => { $('note').textContent = t || ''; };
 const today = () => new Date().toLocaleDateString('en-CA');
 const fmt = (s) => { const p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); };
 const el = (tag, props, ...kids) => { const n = Object.assign(document.createElement(tag), props); kids.forEach((k) => n.append(k)); return n; };
+const daysBetween = (a, b) => { const p = (s) => { const x = s.split('-'); return new Date(+x[0], +x[1] - 1, +x[2]); }; return Math.round((p(b) - p(a)) / 864e5); };
+const PRIO = { high: ['High priority', 'var(--red)'], med: ['Medium priority', 'var(--amber)'], low: ['Low priority', 'var(--green)'] };
+
+/* ---- split-flap counters ---- */
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let firstFlap = true;
+function setFlap(box, text, scramble) {
+  const chars = [...String(text)];
+  while (box.children.length < chars.length) box.append(el('span', { className: 'ft' }));
+  while (box.children.length > chars.length) box.lastChild.remove();
+  chars.forEach((ch, i) => {
+    const t = box.children[i];
+    if (t.textContent === ch && !scramble) return;
+    if (reduced || (!t.textContent && !scramble)) { t.textContent = ch; return; }
+    let steps = scramble && /[0-9]/.test(ch) ? 4 + i * 2 : 1;
+    const tick = () => {
+      t.classList.remove('flip'); void t.offsetWidth; t.classList.add('flip');
+      setTimeout(() => { t.textContent = steps > 1 ? String(Math.floor(Math.random() * 10)) : ch; if (--steps > 0) setTimeout(tick, 120); }, 110);
+    };
+    tick();
+  });
+  box.setAttribute('aria-label', String(text).trim());
+}
+const pad = (n, w) => { const s = String(n); return s.length >= w ? s : ' '.repeat(w - s.length) + s; };
 
 async function boot() {
   const token = new URLSearchParams(location.search).get('invite');
@@ -186,7 +348,8 @@ async function start() {
   $('login').hidden = true; $('accept').hidden = true; $('app').hidden = false;
   const admin = me.role === 'admin';
   if (admin && location.pathname === '/') { location.replace('/dashboard'); return; }
-  $('nav').hidden = !admin; $('team').hidden = !admin; $('taskForm').hidden = !admin; $('pf').hidden = !admin;
+  $('nav').hidden = !admin; $('team').hidden = !admin; $('taskForm').hidden = !admin; $('taskBoard').hidden = !admin; $('pf').hidden = !admin;
+  document.querySelector('.sign h1').textContent = admin ? 'Team tasks' : 'My tasks';
   history.replaceState(null, '', location.pathname);
   await load();
 }
@@ -199,6 +362,7 @@ async function load() {
 
 const STEPS = [20, 50, 70, 100];
 const drafts = {};
+const openComments = new Set();
 function setProgress(t, p) {
   if (p === 100) {
     if (t.needs_photo) { askPhoto(t); return; }                          // 100% needs a photo for this task
@@ -206,46 +370,53 @@ function setProgress(t, p) {
   }
   patch(t.id, { progress: p });
 }
+function leds(p) {
+  const box = el('div', { className: 'leds' }), on = Math.round(p / 5);
+  for (let i = 0; i < 20; i++) box.append(el('i', { className: i < on ? 'on' : '' }));
+  box.setAttribute('role', 'img'); box.setAttribute('aria-label', p + '% done');
+  return box;
+}
 function taskPanel(t, admin) {
   const wrap = el('div', { className: 'prog' });
 
   // Progress
-  wrap.append(el('div', { className: 'lab' }, 'Progress', el('span', { className: 'due', textContent: ' \u00b7 ' + t.progress + '%' })));
-  const m = el('div', { className: 'meter' }, el('i')); m.firstChild.style.width = t.progress + '%';
-  m.setAttribute('role', 'img'); m.setAttribute('aria-label', t.progress + '% done');
-  wrap.append(m);
+  wrap.append(el('div', { className: 'lab' }, el('span', { textContent: 'Progress' }), el('span', { className: 'pc', textContent: t.progress + '%' })));
+  wrap.append(leds(t.progress));
   if (!admin) {
     const g = el('div', { className: 'steps' }); g.setAttribute('role', 'group'); g.setAttribute('aria-label', 'Set progress');
     STEPS.forEach((p) => { const b = el('button', { type: 'button', textContent: p + '%', disabled: t.done, onclick: () => setProgress(t, p) }); b.setAttribute('aria-pressed', String(t.progress === p)); g.append(b); });
     wrap.append(g);
+    const meta = el('div', { className: 'meta' + (!t.done && t.needs_photo ? ' need' : '') });
+    if (t.done) meta.append('Finished.');
+    else meta.append(t.needs_photo ? 'A photo is needed to finish this task (at 100%).' : 'No photo needed for this task.');
+    wrap.append(meta);
   }
-  const meta = el('div', { className: 'meta' });
-  if (admin) {
-    meta.append(el('label', { className: 'pill' }, el('input', { type: 'checkbox', checked: t.needs_photo, onchange: (e) => patch(t.id, { needs_photo: e.target.checked }) }), 'Photo required'));
-  } else if (t.done) meta.append('Finished.');
-  else meta.append(t.needs_photo ? 'A photo is needed to finish this task (at 100%).' : 'No photo needed for this task.');
-  wrap.append(meta);
 
   // Comments, directly below the progress
-  wrap.append(el('div', { className: 'lab', style: 'margin-top:4px' }, 'Comments', el('span', { className: 'due', textContent: t.comment_count ? ' \u00b7 ' + t.comment_count : '' })));
-  const list = el('div', { className: 'clist' });
   const cs = t.comments || [];
+  const det = el('details', { className: 'cmts', open: openComments.has(t.id) || !!drafts[t.id] || (!admin && !t.done && t.comment_count > 0) });
+  det.addEventListener('toggle', () => { if (det.open) openComments.add(t.id); else openComments.delete(t.id); });
+  const sum = el('summary', {}, 'Comments');
+  if (t.comment_count) sum.append(el('span', { className: 'n', textContent: t.comment_count }));
+  det.append(sum);
+  const list = el('div', { className: 'clist' });
   if (t.comment_count > cs.length) list.append(el('p', { className: 'due', textContent: 'Showing the latest ' + cs.length + ' of ' + t.comment_count + ' comments.' }));
   if (cs.length) cs.forEach((c) => list.append(el('div', { className: 'cm' },
-    el('small', { textContent: (c.author_name || 'Someone') + ' \u00b7 ' + new Date(c.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) }),
+    el('small', {}, el('b', { textContent: c.author_name || 'Someone' }), ', ' + new Date(c.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })),
     el('p', { textContent: c.body }))));
   else list.append(el('p', { className: 'due', textContent: 'No comments yet.' }));
-  wrap.append(list);
+  det.append(list);
   const ta = el('textarea', { placeholder: 'What is left to do?', maxLength: 1000, value: drafts[t.id] || '', oninput: () => { drafts[t.id] = ta.value; } });
   ta.setAttribute('aria-label', 'Comment on ' + t.text);
   const err = el('p', { className: 'err', style: 'margin:0' }); err.setAttribute('role', 'alert');
   const post = el('button', { type: 'button', className: 'btn', textContent: 'Post comment', onclick: async () => {
     const v = ta.value.trim(); if (!v) return;
     post.disabled = true; err.textContent = '';
-    try { await api('/api/comments?task=' + t.id, 'POST', { body: v }); drafts[t.id] = ''; await load(); }
+    try { await api('/api/comments?task=' + t.id, 'POST', { body: v }); drafts[t.id] = ''; openComments.add(t.id); await load(); }
     catch (e) { err.textContent = e.message; post.disabled = false; }
   } });
-  wrap.append(el('div', { className: 'cform' }, ta, err, post));
+  det.append(el('div', { className: 'cform' }, ta, err, post));
+  wrap.append(det);
   return wrap;
 }
 
@@ -254,9 +425,9 @@ function render() {
   if (admin) {
     const mem = $('members'); mem.replaceChildren();
     users.forEach((u) => {
-      const info = el('div', { style: 'flex:1;min-width:0' }, el('strong', { textContent: u.name }),
-        el('small', { textContent: u.invited ? '  Invited' : '  Active', style: 'color:' + (u.invited ? 'var(--md)' : 'var(--lo)') }),
-        el('div', { className: 'due', textContent: u.email + (u.phone ? ' \u00b7 ' + u.phone : '') }));
+      const info = el('div', { className: 'info' }, el('strong', { textContent: u.name }),
+        el('span', { className: 'badge ' + (u.invited ? 'inv' : 'act'), textContent: u.invited ? 'Invited' : 'Active' }),
+        el('div', { textContent: u.email + (u.phone ? ', ' + u.phone : '') }));
       const row = el('div', { className: 'reg' }, info);
       if (u.invited) row.append(el('button', { className: 'mini', textContent: 'Resend invite', onclick: async (ev) => {
         ev.target.disabled = true;
@@ -267,6 +438,7 @@ function render() {
         try { await api('/api/users?id=' + u.id, 'DELETE'); load(); } catch (e) { note(e.message); } } }));
       mem.append(row);
     });
+    if (!users.length) mem.append(el('p', { className: 'due', textContent: 'No one here yet. Add a person to send them an invite.' }));
     const opts = (first) => [el('option', { value: first[0], textContent: first[1] })].concat(users.map((u) => el('option', { value: u.id, textContent: u.name })));
     const w = $('who'), wv = w.value; w.replaceChildren(...opts(['', 'Unassigned'])); w.value = wv;
     const p = $('pf'); p.replaceChildren(...[el('option', { value: 'all', textContent: 'Everyone' }), el('option', { value: 'none', textContent: 'Unassigned' })].concat(users.map((u) => el('option', { value: u.id, textContent: u.name })))); p.value = pf;
@@ -274,23 +446,34 @@ function render() {
   const shown = tasks.filter((t) => (filter === 'all' || (filter === 'done' ? t.done : !t.done)) &&
     (!admin || pf === 'all' || (pf === 'none' ? !t.assignee_id : String(t.assignee_id) === pf)));
   const list = $('list'); list.replaceChildren();
+  const td = today();
   shown.forEach((t) => {
+    const late = !t.done && t.due && t.due < td;
     const title = el('span', { className: 'title', textContent: t.text });
-    const body = el('div', { className: 'body' }, title);
+    const titlerow = el('div', { className: 'titlerow' }, title);
     if (admin) {
       title.style.cursor = 'text'; title.title = 'Click to edit';
       title.onclick = () => {
-        const inp = el('input', { type: 'text', value: t.text, style: 'width:100%;padding:4px 8px' });
-        body.replaceChild(inp, title); inp.focus(); inp.select();
+        const inp = el('input', { type: 'text', value: t.text, style: 'flex:1;width:100%;padding:6px 10px;font-weight:700' });
+        titlerow.replaceChild(inp, title); inp.focus(); inp.select();
         let done = false; const fin = (ok) => { if (done) return; done = true; const v = inp.value.trim(); ok && v && v !== t.text ? patch(t.id, { text: v }) : render(); };
         inp.onkeydown = (e) => { if (e.key === 'Enter') fin(true); if (e.key === 'Escape') fin(false); };
         inp.onblur = () => fin(true);
       };
     }
-    if (t.has_photo) body.append(el('button', { className: 'mini', textContent: 'View photo', style: 'margin-left:8px', onclick: () => showPhoto(t) }));
-    if (t.due) { const late = !t.done && t.due < today(); body.append(el('span', { className: 'due' + (late ? ' late' : ''), textContent: (late ? 'Overdue \u00b7 ' : 'Due ') + fmt(t.due) })); }
-    const li = el('li', { className: t.done ? 'done' : '' });
-    li.dataset.p = t.priority;
+    if (t.has_photo) titlerow.append(el('button', { className: 'mini', textContent: 'View photo', onclick: () => showPhoto(t) }));
+
+    // dark strip: priority, due status, admin done toggle
+    const lamp = el('i', { className: 'lamp' }); lamp.style.setProperty('--c', (PRIO[t.priority] || PRIO.med)[1]);
+    const strip = el('div', { className: 'strip' }, el('span', { className: 'pri' }, lamp, (PRIO[t.priority] || PRIO.med)[0]));
+    let whenText = '', whenCls = 'when';
+    if (t.done) { whenText = 'Done'; whenCls += ' fin'; }
+    else if (t.due) {
+      const d = daysBetween(td, t.due);
+      if (d < 0) { whenText = (-d === 1 ? '1 day' : -d + ' days') + ' late, was due ' + fmt(t.due); whenCls += ' late'; }
+      else whenText = d === 0 ? 'Due today' : d === 1 ? 'Due tomorrow' : 'Due ' + fmt(t.due);
+    } else whenText = 'No due date';
+    strip.append(el('span', { className: whenCls, textContent: whenText }));
     if (admin) {
       const cb = el('input', { type: 'checkbox', checked: t.done, onchange: () => {
         if (!t.done) {                                                    // finishing: photo first, unless this task needs none
@@ -302,22 +485,31 @@ function render() {
         if (confirm('Reopen this task? Progress resets to 0% and its photo is deleted.')) patch(t.id, { done: false });
       } });
       cb.setAttribute('aria-label', 'Mark done');
-      li.append(cb);
+      strip.append(el('label', { className: 'donebox' }, cb, 'Done'));
     }
-    li.append(body);
+
+    const body = el('div', { className: 'tbody' }, titlerow);
     if (admin) {
       const sel = el('select', { onchange: () => patch(t.id, { assignee_id: sel.value || null }) },
         el('option', { value: '', textContent: 'Unassigned' }), ...users.map((u) => el('option', { value: u.id, textContent: u.name })));
       sel.value = t.assignee_id || ''; sel.setAttribute('aria-label', 'Assignee');
-      li.append(sel, el('button', { className: 'x', innerHTML: '&times;', ariaLabel: 'Delete task', onclick: async () => { try { await api('/api/tasks?id=' + t.id, 'DELETE'); load(); } catch (e) { note(e.message); } } }));
+      body.append(el('div', { className: 'admin-row' }, sel,
+        el('label', { className: 'pill' }, el('input', { type: 'checkbox', checked: t.needs_photo, onchange: (e) => patch(t.id, { needs_photo: e.target.checked }) }), 'Photo required'),
+        el('button', { className: 'x', textContent: 'Delete', ariaLabel: 'Delete task', onclick: async () => { if (!confirm('Delete "' + t.text + '"?')) return; try { await api('/api/tasks?id=' + t.id, 'DELETE'); load(); } catch (e) { note(e.message); } } })));
     }
-    li.append(taskPanel(t, admin));
+    body.append(taskPanel(t, admin));
+
+    const li = el('li', { className: 'task' + (t.done ? ' done' : '') + (late ? ' late' : '') }, strip, body);
+    li.dataset.p = t.priority;
     list.append(li);
   });
-  if (!shown.length) list.append(el('li', { className: 'empty', textContent: tasks.length ? 'Nothing in this view.' : (admin ? 'No tasks yet. Register people, then create a task.' : 'Nothing is assigned to you yet.') }));
-  const open = tasks.filter((t) => !t.done).length;
-  $('count').textContent = open + ' to do \u00b7 ' + (tasks.length - open) + ' done';
+  if (!shown.length) list.append(el('li', { className: 'empty', textContent: tasks.length ? 'Nothing in this view.' : (admin ? 'No tasks yet. Add your team, then create the first task.' : 'Nothing is assigned to you yet. New tasks will appear here.') }));
+  const open = tasks.filter((t) => !t.done).length, lateN = tasks.filter((t) => !t.done && t.due && t.due < td).length;
+  $('count').textContent = open + ' to do, ' + (tasks.length - open) + ' done';
   $('sub').textContent = 'Signed in as ' + me.name + '. ' + (admin ? open + ' open across the team.' : open + (open === 1 ? ' task' : ' tasks') + ' assigned to you.');
+  const w = Math.max(2, String(tasks.length).length);
+  setFlap($('sumTodo'), pad(open, w), firstFlap); setFlap($('sumDone'), pad(tasks.length - open, w), firstFlap); setFlap($('sumLate'), pad(lateN, w), firstFlap);
+  firstFlap = false;
 }
 let pendingTask = null, pendingImage = null;
 if (/Android/i.test(navigator.userAgent)) {   // Android: open the rear camera directly instead of the file picker
