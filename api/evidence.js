@@ -46,7 +46,7 @@ export default async function handler(req, res) {
             values (${id}, ${mime}, decode(${buf.toString('base64')}, 'base64'), ${me.id}, ${token})
             on conflict (task_id) do update
             set mime = excluded.mime, data = excluded.data, uploaded_by = excluded.uploaded_by, view_token = excluded.view_token, uploaded_at = now()`,
-        sql`update tasks set done = true, progress = 100 where id = ${id}`,
+        sql`update tasks set done = true, progress = 100, done_at = coalesce(done_at, now()) where id = ${id}`,
       ]);
       // Tell the notification recipients (awaited, because serverless functions can stop right after responding).
       const [info] = await sql`select text from tasks where id = ${id}`;
