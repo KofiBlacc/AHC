@@ -319,7 +319,7 @@ dialog .sub{font-size:.9rem;margin:0}
           <button data-f="active" aria-pressed="true">To do</button><button data-f="done" aria-pressed="false">Done</button><button data-f="all" aria-pressed="false">All</button>
         </div>
         <div class="bar-r">
-          <select id="pf" aria-label="Show tasks for" hidden></select>
+          <select id="pf" aria-label="Filter by department" hidden></select>
           <span class="count" id="count"></span>
         </div>
       </div>
@@ -392,7 +392,7 @@ async function start() {
 }
 async function load() {
   try {
-    const [t, u, dp] = await Promise.all([api('/api/tasks'), me.role === 'admin' ? api('/api/users') : { users: [] }, me.role === 'admin' ? api('/api/departments') : { departments: [] }]);
+    const [t, u, dp] = await Promise.all([api('/api/tasks'), me.role === 'admin' ? api('/api/users') : { users: [] }, me.role === 'admin' || me.role === 'viewer' ? api('/api/departments') : { departments: [] }]);
     tasks = t.tasks; users = u.users; departments = dp.departments;
     if (me.role === 'viewer') { const seen = new Map(); tasks.forEach((x) => { if (x.assignee_id) seen.set(x.assignee_id, x.assignee_name || 'Person ' + x.assignee_id); }); users = [...seen].map(([id, name]) => ({ id, name })); }
     render();
@@ -507,10 +507,11 @@ function render() {
     const w = $('who'), wv = w.value; w.replaceChildren(...opts(['', 'Unassigned'])); w.value = wv;
   }
   if (staff) {
-    const p = $('pf'); p.replaceChildren(...[el('option', { value: 'all', textContent: 'Everyone' }), el('option', { value: 'none', textContent: 'Unassigned' })].concat(users.filter((u) => u.role !== 'viewer').map((u) => el('option', { value: u.id, textContent: u.name })))); p.value = pf;
+    if (pf !== 'all' && pf !== 'none' && !departments.some((x) => String(x.id) === pf)) pf = 'all';   // that department no longer exists
+    const p = $('pf'); p.replaceChildren(...[el('option', { value: 'all', textContent: 'All departments' }), el('option', { value: 'none', textContent: 'No department' })].concat(departments.map((x) => el('option', { value: x.id, textContent: x.name })))); p.value = pf;
   }
   const shown = tasks.filter((t) => (filter === 'all' || (filter === 'done' ? t.done : !t.done)) &&
-    (!staff || pf === 'all' || (pf === 'none' ? !t.assignee_id : String(t.assignee_id) === pf)));
+    (!staff || pf === 'all' || (pf === 'none' ? !t.department_id : String(t.department_id) === pf)));
   const list = $('list'); list.replaceChildren();
   const td = today();
   shown.forEach((t) => {
