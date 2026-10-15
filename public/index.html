@@ -280,7 +280,7 @@ dialog .sub{font-size:.9rem;margin:0}
           <p class="sub">They'll receive an email with a link to set their password.</p>
           <label for="rName">Name</label><input id="rName" type="text" required autocomplete="off">
           <label for="rEmail">Email</label><input id="rEmail" type="email" required autocomplete="off">
-          <label for="rPhone">Mobile number</label><input id="rPhone" type="tel" required autocomplete="off" placeholder="+1 555 010 0199">
+          <label for="rPhone">Mobile number (optional)</label><input id="rPhone" type="tel" autocomplete="off" placeholder="+1 555 010 0199">
           <label for="rRole">Access</label><select id="rRole"><option value="member">Team member: works on assigned tasks</option><option value="viewer">Viewer: sees the dashboard and all tasks, read-only</option></select>
           <p class="err" id="rMsg" role="status"></p>
           <div class="acts"><button type="button" class="ghost" id="rCancel">Cancel</button><button class="btn" id="rSave" type="submit">Save and send invite</button></div>

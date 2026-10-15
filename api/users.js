@@ -34,7 +34,8 @@ export default async function handler(req, res) {
       const name = String(b.name || '').trim(), email = String(b.email || '').trim().toLowerCase(), phone = String(b.phone || '').trim();
       const digits = phone.replace(/\D/g, '');
       if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json(res, 400, { error: 'Enter a name and a valid email.' });
-      if (!PHONE.test(phone) || digits.length < 7 || digits.length > 15) return json(res, 400, { error: 'Enter a valid mobile number.' });
+      // The mobile number is optional; if one is given, it must look like a phone number.
+      if (phone && (!PHONE.test(phone) || digits.length < 7 || digits.length > 15)) return json(res, 400, { error: 'Enter a valid mobile number, or leave it empty.' });
       const role = b.role === 'viewer' ? 'viewer' : 'member'; // admins are only created by the first-login setup
       let user;
       try { [user] = await sql`insert into users (name, email, phone, role) values (${name}, ${email}, ${phone}, ${role}) returning id, name, email, role`; }
