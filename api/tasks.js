@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   const me = await guard(req, res);
   if (!me) return;
   const isAdmin = me.role === 'admin';
-  const seesAll = isAdmin || me.role === 'viewer';
+  const seesAll = isAdmin || me.role === 'viewer' || me.role === 'lead';
   if (me.role === 'viewer' && req.method !== 'GET') return json(res, 403, { error: 'Viewers have read-only access.' });
   try {
     if (req.method === 'GET') {
@@ -53,7 +53,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'PATCH') {
       const [t] = await sql`select * from tasks where id = ${id}`;
-      if (!t || (!isAdmin && t.assignee_id !== me.id)) return json(res, 404, { error: 'Task not found.' });
+      if (!t) return json(res, 404, { error: 'Task not found.' });
+      if (!isAdmin && t.assignee_id !== me.id) return me.role === 'lead' ? json(res, 403, { error: 'You can only update your own tasks.' }) : json(res, 404, { error: 'Task not found.' });
 
       if (!isAdmin) {
         // Members can only move the progress of their own, unfinished tasks.

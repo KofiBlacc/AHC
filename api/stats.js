@@ -28,7 +28,7 @@ export default async function handler(req, res) {
           from users u left join tasks t on t.assignee_id = u.id
                and (${all}::boolean or (${none}::boolean and t.department_id is null) or t.department_id = ${did}::int)
           group by u.id, u.name, u.role
-          having (${all}::boolean and u.role = 'member') or count(t.id) > 0
+          having (${all}::boolean and u.role in ('member', 'lead')) or count(t.id) > 0
           order by u.name`,
       sql`select count(*)::int as assigned,
                  (count(*) filter (where t.done))::int as done,
